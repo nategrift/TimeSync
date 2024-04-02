@@ -1,4 +1,4 @@
-# TymeSync 
+# TimeSync 
 
 A basic watch with hopes to be a more advanced smart watch with time.
 

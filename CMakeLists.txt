@@ -4,4 +4,4 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 set(CMAKE_CXX_STANDARD 11) # Or a later standard, like 14, 17, etc.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project(TymeSync)
+project(TimeSync)
