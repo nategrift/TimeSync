@@ -33,8 +33,8 @@ void TimeManager::updateTime() {
 
     char strftime_buf[64];
     // %H:%M:%S for 24 hr format
-    // %H:%M:%S %p is 12 hr with am/pm
-    strftime(strftime_buf, sizeof(strftime_buf), "%H:%M:%S %p", &timeinfo);
+    // %I:%M:%S %p is 12 hr with am/pm
+    strftime(strftime_buf, sizeof(strftime_buf), "%I:%M:%S %p", &timeinfo);
 
     ESP_LOGI("TimeManager", "New Time: %s", strftime_buf);
 
