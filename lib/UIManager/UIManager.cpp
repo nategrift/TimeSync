@@ -9,7 +9,7 @@ extern "C" {
 }
 
 UIManager::UIManager() {
-
+    LCD_init(LCD_ADDR, SDA_PIN, SCL_PIN, LCD_COLS, LCD_ROWS);
 }
 
 /**
@@ -20,40 +20,62 @@ void UIManager::renderTask(void *param) {
     instance->render();
 }
 
-void UIManager::addOrUpdateComponent(ComponentID id, const TextComponent& component) {
+bool UIManager::hasComponent(ComponentID id) {
+    return components.contains(id);
+}
+int UIManager::addOrUpdateComponent(const TextComponent& component) {
+    ComponentID id = nextComponentId++;
     components[id] = component;
     needsUpdate[id] = true;
+    return id;
 }
 
 void UIManager::updateComponentText(ComponentID id, const std::string& newText) {
-    if (id >= 0 && id < components.size()) {
-        components[id].text = newText;
-        needsUpdate[id] = true;
+    if (id > 0 && components.contains(id)) {
+        // make sure we only update if needed
+        if (components[id].text != newText) {
+            components[id].text = newText;
+            needsUpdate[id] = true;
+        }
+    } else {
+        ESP_LOGI("UIManager", "ERROR: Unable to update text for %d, it doesn't exist", id);
     }
 }
 
 void UIManager::render() {
     while (true) {
         // Render each component based on the id
-        bool freshScreen = false;
+        int currentRow = 0;
         for (auto& pair : components) {
             const auto& component = pair.second;
-            if (component.visible && needsUpdate[pair.first]) {
-                // only clear screen if there is an update
-                if (freshScreen) {
-                    LCD_home();
-                    LCD_clearScreen();
-                    freshScreen = false;
-                }
+            // make sure we want to render the component, and make sure that we have room on screen
+            if (component.visible && needsUpdate[pair.first] && currentRow < 2) {
                 // set based on which element is added to screen first, we will change this to a better display later
-                LCD_setCursor(0, static_cast<int>(pair.first));
+                LCD_setCursor(0, currentRow);
+
+                // clear the screen first
+                std::string clearLine(LCD_COLS, ' '); // Create a string of spaces the length of LCD_COLS
+                LCD_writeStr(const_cast<char*>(clearLine.c_str()));
+
+                LCD_setCursor(0, currentRow);
                 LCD_writeStr(const_cast<char*>(component.text.c_str()));
                 ESP_LOGI("UIManager", "Displaying: %s", component.text.c_str());
                 needsUpdate[pair.first] = false;
+                currentRow++;
             }
         }
 
         // currently only 2fps
         vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
+
+void UIManager::deleteComponenet(ComponentID id) {
+    if (components.contains(id)) {
+        components.erase(id);
+        needsUpdate.erase(id);
+        ESP_LOGI("UIManager", "Component %d deleted successfully", id);
+    } else {
+        ESP_LOGI("UIManager", "ERROR: Unable to delete component %d, it doesn't exist", id);
     }
 }

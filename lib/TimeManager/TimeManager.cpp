@@ -1,16 +1,13 @@
-#include "TimeManager.h"
-#include "esp_log.h"
-#include "esp_sleep.h"
-#include "driver/rtc_io.h"
-#include "esp32/rom/rtc.h"
-#include <time.h>
-#include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "TimeManager.h"
+#include <time.h>
+#include <sys/time.h>
+#include "esp_log.h"
 
-TimeManager::TimeManager(UIManager& uiManager) 
-    : uiManager(uiManager) {
+TimeManager::TimeManager() {
     initializeTime();
+    xTaskCreate(timeTask, "TimeUpdateTask", 2048, this, 5, &timeTaskHandle);
 }
 
 void TimeManager::initializeTime() {
@@ -25,20 +22,14 @@ void TimeManager::initializeTime() {
 }
 
 void TimeManager::updateTime() {
-    // Update the time from the RTC esp module
     time_t now;
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
 
-    char strftime_buf[64];
-    // %H:%M:%S for 24 hr format
-    // %I:%M:%S %p is 12 hr with am/pm
-    strftime(strftime_buf, sizeof(strftime_buf), "%I:%M:%S %p", &timeinfo);
-
-    ESP_LOGI("TimeManager", "New Time: %s", strftime_buf);
-
-    uiManager.updateComponentText(ComponentID::Time, std::string(strftime_buf));
+    for (auto& [id, listener] : listeners) {
+        listener(timeinfo);
+    }
 }
 
 void TimeManager::setTime(time_t t) {
@@ -50,12 +41,18 @@ void TimeManager::setTime(time_t t) {
 
 void TimeManager::timeTask(void *param) {
     auto *instance = static_cast<TimeManager *>(param);
-    while(1)
-    {
+    while (1) {
         instance->updateTime();
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
+TimeManager::ListenerId TimeManager::addTimeUpdateListener(const TimeUpdateListener& listener) {
+    ListenerId id = nextListenerId++;
+    listeners[id] = listener;
+    return id;
+}
 
+void TimeManager::removeTimeUpdateListener(ListenerId id) {
+    listeners.erase(id);
+}
