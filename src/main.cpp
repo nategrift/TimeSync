@@ -11,6 +11,9 @@ extern "C" {
 #include "TimeManager.h"
 #include "TextComponent.h"
 #include "InputManager.h"
+#include "FileManager.h"
+
+#include <string>
 
 
 #include "AppManager.h"
@@ -29,8 +32,9 @@ extern "C" void app_main() {
     static UIManager uiManager;
     static TimeManager timeManager;
     static InputManager inputManager(JOYSTICK_CHANNEL, BUTTON_PIN);
+    FileManager fileManager;
 
-    static AppManager appManager(uiManager, inputManager, timeManager);
+    static AppManager appManager(uiManager, inputManager, timeManager, fileManager);
 
     Clock* clockApp = new Clock(appManager);
     Alarm* alarmApp = new Alarm(appManager);
@@ -42,8 +46,12 @@ extern "C" void app_main() {
 
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 2048, &uiManager, 5, NULL);
-    xTaskCreate(&TimeManager::timeTask, "Timing Task", 2048, &timeManager, 5, NULL);
+    xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
     xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
+
+    fileManager.writeData("Alarm", "alarms.txt", "alarms=12:01");
+    std::string alarms = fileManager.readData("Alarm", "alarms.txt");
+    ESP_LOGI("Main", "File input: %s", alarms.c_str());
 
     // TEST cases for adding input events
     inputManager.addListener([](InputEvent event) {

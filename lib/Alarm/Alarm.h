@@ -1,9 +1,6 @@
-// Alarm.h
-
 #ifndef ALARM_H
 #define ALARM_H
 
-// #include "IApp.h"
 #include <vector>
 #include <functional>
 #include <ctime>

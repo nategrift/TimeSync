@@ -7,7 +7,7 @@
 
 TimeManager::TimeManager() {
     initializeTime();
-    xTaskCreate(timeTask, "TimeUpdateTask", 2048, this, 5, &timeTaskHandle);
+    xTaskCreate(timeTask, "TimeUpdateTask", 4096, this, 5, &timeTaskHandle);
 }
 
 void TimeManager::initializeTime() {

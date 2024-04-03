@@ -8,6 +8,7 @@
 #include "InputManager.h"
 #include "UIManager.h"
 #include "TimeManager.h"
+#include "FileManager.h"
 
 
 class AppManager {
@@ -17,10 +18,11 @@ private:
     UIManager& uiManager;
     InputManager& inputManager;
     TimeManager& timeManager;
+    FileManager& fileManager;
 
 public:
-    AppManager(UIManager& uiManager, InputManager& inputManager, TimeManager& timeManager) : 
-        uiManager(uiManager), inputManager(inputManager), timeManager(timeManager) {}
+    AppManager(UIManager& uiManager, InputManager& inputManager, TimeManager& timeManager, FileManager& fileManager) : 
+        uiManager(uiManager), inputManager(inputManager), timeManager(timeManager), fileManager(fileManager) {}
 
 
     void registerApp(const std::string& name, IApp* app);
@@ -32,6 +34,7 @@ public:
     UIManager& getUIManager() {return uiManager;}  
     InputManager& getInputManager() {return inputManager;}
     TimeManager& getTimeManager() {return timeManager;}
+    FileManager& getFileManager() {return fileManager;}
 
 };
 
