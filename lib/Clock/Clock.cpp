@@ -27,8 +27,8 @@ void Clock::launch() {
 
 void Clock::close() {
     UIManager& uiManager = appManager.getUIManager();
-    uiManager.deleteComponenet(clockTime_UI);
-    uiManager.deleteComponenet(clockTitle_UI);
+    uiManager.deleteComponent(clockTime_UI);
+    uiManager.deleteComponent(clockTitle_UI);
 
     if (timeListenerId != -1) {
         TimeManager& timeManager = appManager.getTimeManager();

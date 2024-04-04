@@ -21,6 +21,7 @@ extern "C" {
 
 #include "Alarm.h"
 #include "Clock.h"
+#include "Stopwatch.h"
 
 // END APPS
 
@@ -38,11 +39,13 @@ extern "C" void app_main() {
 
     Clock* clockApp = new Clock(appManager);
     Alarm* alarmApp = new Alarm(appManager);
+    Stopwatch* stopWatchApp = new Stopwatch(appManager);
 
     appManager.registerApp("Clock", clockApp);
     appManager.registerApp("Alarm", alarmApp);
+    appManager.registerApp("StopWatch", stopWatchApp);
 
-    appManager.launchApp("Clock");
+    appManager.launchApp("StopWatch");
 
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 2048, &uiManager, 5, NULL);

@@ -27,8 +27,8 @@ void Alarm::close() {
     isLaunched = false;
 
     UIManager& uiManager = appManager.getUIManager();
-    uiManager.deleteComponenet(alarmTime_UI);
-    uiManager.deleteComponenet(alarmTitle_UI);
+    uiManager.deleteComponent(alarmTime_UI);
+    uiManager.deleteComponent(alarmTitle_UI);
 }
 
 void Alarm::backgroundActivity() {

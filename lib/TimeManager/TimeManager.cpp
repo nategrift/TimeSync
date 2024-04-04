@@ -43,7 +43,7 @@ void TimeManager::timeTask(void *param) {
     auto *instance = static_cast<TimeManager *>(param);
     while (1) {
         instance->updateTime();
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 

@@ -25,7 +25,7 @@ public:
     bool hasComponent(ComponentID id);
     ComponentID addOrUpdateComponent(const TextComponent& component);
     void updateComponentText(ComponentID id, const std::string& newText);
-    void deleteComponenet(ComponentID id);
+    void deleteComponent(ComponentID id);
     void render();
 };
 #endif // UI_MANAGER_H

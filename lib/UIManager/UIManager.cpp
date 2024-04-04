@@ -66,11 +66,11 @@ void UIManager::render() {
         }
 
         // currently only 2fps
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
-void UIManager::deleteComponenet(ComponentID id) {
+void UIManager::deleteComponent(ComponentID id) {
     if (components.contains(id)) {
         components.erase(id);
         needsUpdate.erase(id);
