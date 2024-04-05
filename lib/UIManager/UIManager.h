@@ -1,8 +1,10 @@
 #ifndef UI_MANAGER_H
 #define UI_MANAGER_H
 
-#include "TextComponent.h"
+#include "IUIComponent.h"
+#include <string>
 #include <map>
+#include <memory>
 
 #define LCD_ADDR 0x27
 #define SDA_PIN  13
@@ -13,19 +15,19 @@
 class UIManager {
 private:
     using ComponentID = int;
-    std::map<ComponentID, TextComponent> components;
+    std::map<ComponentID, std::shared_ptr<IUIComponent>> components;
     std::map<ComponentID, bool> needsUpdate;
     ComponentID nextComponentId = 1;
 
 public:
-
     UIManager();
 
     static void renderTask(void *param);
     bool hasComponent(ComponentID id);
-    ComponentID addOrUpdateComponent(const TextComponent& component);
+    ComponentID addOrUpdateComponent(std::shared_ptr<IUIComponent> component);
     void updateComponentText(ComponentID id, const std::string& newText);
     void deleteComponent(ComponentID id);
     void render();
 };
+
 #endif // UI_MANAGER_H

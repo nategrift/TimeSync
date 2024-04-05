@@ -1,4 +1,9 @@
 #include <vector>
+#include <map>
+#include <memory>
+#include "IUIComponent.h"
+#include "TextComponent.h"
+#include <typeinfo>
 #include "UIManager.h"
 
 extern "C" {
@@ -6,24 +11,25 @@ extern "C" {
 #include "freertos/task.h"
 #include "HD44780.h"
 #include <esp_log.h>
+#include "esp_task_wdt.h"
 }
 
 UIManager::UIManager() {
     LCD_init(LCD_ADDR, SDA_PIN, SCL_PIN, LCD_COLS, LCD_ROWS);
 }
 
-/**
- * Render function for task. Needs to be static so we call it statically then cast the instance of the UIManager to have the correct state
-*/
 void UIManager::renderTask(void *param) {
     auto *instance = static_cast<UIManager *>(param);
-    instance->render();
+    if (instance != nullptr) {
+        instance->render();
+    }
 }
 
 bool UIManager::hasComponent(ComponentID id) {
-    return components.contains(id);
+    return components.find(id) != components.end();
 }
-int UIManager::addOrUpdateComponent(const TextComponent& component) {
+
+int UIManager::addOrUpdateComponent(std::shared_ptr<IUIComponent> component) {
     ComponentID id = nextComponentId++;
     components[id] = component;
     needsUpdate[id] = true;
@@ -31,11 +37,16 @@ int UIManager::addOrUpdateComponent(const TextComponent& component) {
 }
 
 void UIManager::updateComponentText(ComponentID id, const std::string& newText) {
-    if (id > 0 && components.contains(id)) {
-        // make sure we only update if needed
-        if (components[id].text != newText) {
-            components[id].text = newText;
-            needsUpdate[id] = true;
+    if (id > 0 && hasComponent(id)) {
+        auto& component = components[id];
+        if (component && component->getType() == ElementType::TEXT) {
+            auto textComponent = std::static_pointer_cast<TextComponent>(component);
+            if (textComponent != nullptr) {
+                textComponent->text = newText;
+                needsUpdate[id] = true;
+            }
+        } else {
+            ESP_LOGI("UIManager", "Component with id %d is not a Text Component", id);
         }
     } else {
         ESP_LOGI("UIManager", "ERROR: Unable to update text for %d, it doesn't exist", id);
@@ -44,34 +55,24 @@ void UIManager::updateComponentText(ComponentID id, const std::string& newText) 
 
 void UIManager::render() {
     while (true) {
-        // Render each component based on the id
         int currentRow = 0;
+        LCD_clearScreen();
         for (auto& pair : components) {
-            const auto& component = pair.second;
-            // make sure we want to render the component, and make sure that we have room on screen
-            if (component.visible && needsUpdate[pair.first] && currentRow < 2) {
-                // set based on which element is added to screen first, we will change this to a better display later
-                LCD_setCursor(0, currentRow);
-
-                // clear the screen first
-                std::string clearLine(LCD_COLS, ' '); // Create a string of spaces the length of LCD_COLS
-                LCD_writeStr(const_cast<char*>(clearLine.c_str()));
-
-                LCD_setCursor(0, currentRow);
-                LCD_writeStr(const_cast<char*>(component.text.c_str()));
-                ESP_LOGI("UIManager", "Displaying: %s", component.text.c_str());
-                needsUpdate[pair.first] = false;
+            auto component = pair.second;
+            // make sure we want to render the component
+            if (component != nullptr) {
+                component->render(currentRow);
+                // needsUpdate[pair.first] = false;
                 currentRow++;
             }
         }
 
-        // currently only 2fps
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
 void UIManager::deleteComponent(ComponentID id) {
-    if (components.contains(id)) {
+    if (hasComponent(id)) {
         components.erase(id);
         needsUpdate.erase(id);
         ESP_LOGI("UIManager", "Component %d deleted successfully", id);

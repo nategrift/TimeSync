@@ -2,27 +2,34 @@
 #include "TextComponent.h"
 #include <chrono>
 #include <esp_log.h>
-
+#include <memory>
 
 Stopwatch::Stopwatch(AppManager& manager) 
     : IApp(manager), appManager(manager), isRunning(false), elapsed(0), 
-      startTime(), stopwatchDisplayId(-1), timeListenerId(-1) {}
+      startTime(), stopwatchDisplayId(-1), timeListenerId(-1), inputListenerId(-1) {}
 
 
 Stopwatch::~Stopwatch() {
     if (timeListenerId != -1) {
         TimeManager& timeManager = appManager.getTimeManager();
         timeManager.removeTimeUpdateListener(timeListenerId);
+        timeListenerId = -1;
+    }
+    if (inputListenerId != -1) {
+        InputManager& inputManager = appManager.getInputManager();
+        inputManager.removeListener(inputListenerId);
+        inputListenerId = -1;
     }
 }
 
 void Stopwatch::launch() {
     UIManager& uiManager = appManager.getUIManager();
-    stopwatchDisplayId = uiManager.addOrUpdateComponent(TextComponent("--:--:--.---", true));
+    auto textComponent = std::make_shared<TextComponent>("--:--:--.---");
+    stopwatchDisplayId = uiManager.addOrUpdateComponent(textComponent);
 
     updateDisplay();
     InputManager& inputManager = appManager.getInputManager();
-    inputManager.addListener([this](InputEvent event) {
+    inputListenerId = inputManager.addListener([this](InputEvent event) {
         if (event == InputEvent::BUTTON_CLICK) {
             if (this->isRunning) {
                 this->stop();
@@ -43,14 +50,22 @@ void Stopwatch::launch() {
 }
 
 void Stopwatch::close() {
-    UIManager& uiManager = appManager.getUIManager();
-    uiManager.deleteComponent(stopwatchDisplayId);
-
+    // clean up
     if (timeListenerId != -1) {
         TimeManager& timeManager = appManager.getTimeManager();
         timeManager.removeTimeUpdateListener(timeListenerId);
         timeListenerId = -1;
     }
+
+    if (inputListenerId != -1) {
+        InputManager& inputManager = appManager.getInputManager();
+        inputManager.removeListener(inputListenerId);
+        inputListenerId = -1;
+    }
+    
+    UIManager& uiManager = appManager.getUIManager();
+    uiManager.deleteComponent(stopwatchDisplayId);
+
 }
 
 void Stopwatch::start() {

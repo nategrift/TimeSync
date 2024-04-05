@@ -22,6 +22,43 @@ void AppManager::launchApp(const std::string& appName) {
     }
 }
 
+void AppManager::launchAppAtIndex(size_t index) {
+    if (index < appRegistry.size()) {
+        auto& appPair = appRegistry[index];
+        launchApp(appPair.first);
+    }
+}
+
+void AppManager::launchNextApp() {
+    if (appRegistry.empty()) return;
+
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < appRegistry.size(); i++) {
+        if (appRegistry[i].first == openAppName) {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    size_t nextIndex = (currentIndex + 1) % appRegistry.size();
+    launchAppAtIndex(nextIndex);
+}
+
+void AppManager::launchPreviousApp() {
+    if (appRegistry.empty()) return;
+
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < appRegistry.size(); i++) {
+        if (appRegistry[i].first == openAppName) {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    size_t previousIndex = (currentIndex + appRegistry.size() - 1) % appRegistry.size();
+    launchAppAtIndex(previousIndex);
+}
+
 void AppManager::closeApp(const std::string& appName) {
     if (this->openAppName == appName) {
         IApp* currentApp = getCurrentApp();

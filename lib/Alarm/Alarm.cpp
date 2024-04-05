@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "TextComponent.h"
 #include "UIManager.h"
+#include <memory>
 
 #include "Alarm.h"
 
@@ -19,8 +20,10 @@ void Alarm::launch() {
     isLaunched = true;
 
     UIManager& uiManager = appManager.getUIManager();
-    alarmTime_UI = uiManager.addOrUpdateComponent(TextComponent("--:--", true));
-    alarmTitle_UI = uiManager.addOrUpdateComponent(TextComponent("Add An Alarm.", true));
+    auto timeComponent = std::make_shared<TextComponent>("--:--");
+    alarmTime_UI = uiManager.addOrUpdateComponent(timeComponent);
+    auto titleComponent = std::make_shared<TextComponent>("Alarm");
+    alarmTitle_UI = uiManager.addOrUpdateComponent(titleComponent);
 }
 
 void Alarm::close() {

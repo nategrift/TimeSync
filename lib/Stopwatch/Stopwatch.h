@@ -14,6 +14,7 @@ private:
     std::chrono::time_point<std::chrono::system_clock> startTime;
     int stopwatchDisplayId;
     int timeListenerId;
+    int inputListenerId;
 
 public:
     Stopwatch(AppManager& manager);

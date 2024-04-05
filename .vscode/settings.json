@@ -54,6 +54,10 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "i2c_master.h": "c",
-        "ctime": "cpp"
+        "ctime": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "fstream": "cpp",
+        "iostream": "cpp"
     }
 }

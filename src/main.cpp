@@ -29,6 +29,16 @@ extern "C" {
 #define JOYSTICK_CHANNEL ADC1_CHANNEL_7
 #define BUTTON_PIN GPIO_NUM_12
 
+#define configUSE_TRACE_FACILITY 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
+
+#define traceTASK_SWITCHED_IN() {\
+    UBaseType_t core = xPortGetCoreID();\
+    const char* taskName = pcTaskGetName(NULL);\
+    ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
+}
+
 extern "C" void app_main() {
     static UIManager uiManager;
     static TimeManager timeManager;
@@ -45,27 +55,27 @@ extern "C" void app_main() {
     appManager.registerApp("Alarm", alarmApp);
     appManager.registerApp("StopWatch", stopWatchApp);
 
-    appManager.launchApp("StopWatch");
+    appManager.launchApp("Clock");
 
     // Create tasks for rendering and time management
-    xTaskCreate(&UIManager::renderTask, "Rendering Task", 2048, &uiManager, 5, NULL);
+    xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 2, NULL);
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
-    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
+    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 5, NULL);
 
-    fileManager.writeData("Alarm", "alarms.txt", "alarms=12:01");
-    std::string alarms = fileManager.readData("Alarm", "alarms.txt");
-    ESP_LOGI("Main", "File input: %s", alarms.c_str());
+    // fileManager.writeData("Alarm", "alarms.txt", "alarms=12:01");
+    // std::string alarms = fileManager.readData("Alarm", "alarms.txt");
+    // ESP_LOGI("Main", "File input: %s", alarms.c_str());
 
     // TEST cases for adding input events
     inputManager.addListener([](InputEvent event) {
         switch (event) {
             case InputEvent::JOYSTICK_UP:
                 ESP_LOGI("InputManager", "Joystick moved up");
-                appManager.launchApp("Clock");
+                appManager.launchNextApp();
                 break;
             case InputEvent::JOYSTICK_DOWN:
                 ESP_LOGI("InputManager", "Joystick moved down");
-                appManager.launchApp("Alarm");
+                appManager.launchPreviousApp();
                 break;
             case InputEvent::BUTTON_CLICK:
                 ESP_LOGI("InputManager", "Button clicked");
