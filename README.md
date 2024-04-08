@@ -2,6 +2,10 @@
 
 A basic watch with hopes to be a more advanced smart watch with time.
 
+### System Design
+To see how the code is designed and the structure behind this TimeSync System, please see my FigJam file that shows a visual representation of the code.
+[FigJam](https://www.figma.com/file/E1JAc8ijfQZMej6hGPKK3q/TimeSync---System-Design?type=whiteboard&node-id=0%3A1&t=UBQqavuqREo1Pac7-1)
+
 ### Goals
 
 - Use the ESP-IDF framework (Instead of Ardunio)
