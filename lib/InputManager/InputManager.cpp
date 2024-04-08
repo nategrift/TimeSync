@@ -29,32 +29,47 @@ void InputManager::inputTask(void* arg) {
     auto* instance = static_cast<InputManager*>(arg);
     instance->pollInputs();
 }
-
 void InputManager::pollInputs() {
+    uint32_t buttonPressStartTime = 0;
+    uint32_t longPressDuration = 500; // ms
+    bool isButtonPressed = false;
+
     while (true) {
         int joystickValue = adc1_get_raw(joystickChannel);
 
-        // Debounce delay to only register events after a delay
-        // TODO: Eventually we should turn this into a timeout for each, so that we can handle multiple events of different events in that debouce time
-        int debouceDelay = 600;
-
         if (joystickValue > JOYSTICK_MIDDLE_THRESHOLD + JOYSTICK_PRECISION) {
             notifyListeners(InputEvent::JOYSTICK_UP);
-            vTaskDelay(pdMS_TO_TICKS(debouceDelay));
+            vTaskDelay(pdMS_TO_TICKS(600));
         } else if (joystickValue < JOYSTICK_MIDDLE_THRESHOLD - JOYSTICK_PRECISION) {
             notifyListeners(InputEvent::JOYSTICK_DOWN);
-            vTaskDelay(pdMS_TO_TICKS(debouceDelay));
+            vTaskDelay(pdMS_TO_TICKS(600));
+        }
+        
+        int buttonState = gpio_get_level(buttonPin);
+        if (buttonState == 0) {
+            if (!isButtonPressed) {
+                buttonPressStartTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
+                ESP_LOGI("Input", "pressed button down");
+                isButtonPressed = true;
+            }
+        } else {
+            if (isButtonPressed) {
+                ESP_LOGI("Input", "lifted button up");
+                uint32_t currentTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
+                if (currentTime - buttonPressStartTime > longPressDuration) {
+                    notifyListeners(InputEvent::BUTTON_LONG_PRESS);
+                } else {
+                    notifyListeners(InputEvent::BUTTON_PRESS);
+                }
+                isButtonPressed = false;
+                buttonPressStartTime = 0;
+            }
         }
 
-        if (gpio_get_level(buttonPin) == 0) {
-            notifyListeners(InputEvent::BUTTON_CLICK);
-            vTaskDelay(pdMS_TO_TICKS(debouceDelay));
-        }
-
-        // we don't need to read very often, are hardware isn't fast enough to matter
         vTaskDelay(pdMS_TO_TICKS(40));
     }
 }
+
 
 void InputManager::notifyListeners(InputEvent event) {
     for (auto& listener : listeners) {

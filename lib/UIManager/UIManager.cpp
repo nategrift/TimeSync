@@ -14,29 +14,33 @@ extern "C" {
 #include "esp_task_wdt.h"
 }
 
+#include <mutex>
+
+
 UIManager::UIManager() {
     LCD_init(LCD_ADDR, SDA_PIN, SCL_PIN, LCD_COLS, LCD_ROWS);
 }
 
 void UIManager::renderTask(void *param) {
     auto *instance = static_cast<UIManager *>(param);
-    if (instance != nullptr) {
-        instance->render();
-    }
+    instance->renderLoop();
 }
 
 bool UIManager::hasComponent(ComponentID id) {
     return components.find(id) != components.end();
 }
 
-int UIManager::addOrUpdateComponent(std::shared_ptr<IUIComponent> component) {
+UIManager::ComponentID UIManager::addOrUpdateComponent(std::shared_ptr<IUIComponent> component) {
+    std::lock_guard<std::mutex> lock(componentsMutex);
     ComponentID id = nextComponentId++;
     components[id] = component;
     needsUpdate[id] = true;
     return id;
 }
 
+
 void UIManager::updateComponentText(ComponentID id, const std::string& newText) {
+    std::lock_guard<std::mutex> lock(componentsMutex);
     if (id > 0 && hasComponent(id)) {
         auto& component = components[id];
         if (component && component->getType() == ElementType::TEXT) {
@@ -53,30 +57,49 @@ void UIManager::updateComponentText(ComponentID id, const std::string& newText) 
     }
 }
 
-void UIManager::render() {
-    while (true) {
-        int currentRow = 0;
-        LCD_clearScreen();
-        for (auto& pair : components) {
-            auto component = pair.second;
-            // make sure we want to render the component
-            if (component != nullptr) {
-                component->render(currentRow);
-                // needsUpdate[pair.first] = false;
-                currentRow++;
-            }
-        }
+void UIManager::deleteComponent(ComponentID id) {
+    std::lock_guard<std::mutex> lock(componentsMutex);
+    if (hasComponent(id)) {
+        deletionQueue.push_back(id);
+    }
+}
+void UIManager::processDeletionQueue() {
+    std::lock_guard<std::mutex> lock(componentsMutex);
+    for (auto id : deletionQueue) {
+        components.erase(id);
+        needsUpdate.erase(id);
+    }
+    deletionQueue.clear();
+}
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+
+void UIManager::render() {
+
+    decltype(components) componentsCopy;
+    {
+        std::lock_guard<std::mutex> lock(componentsMutex);
+        componentsCopy = components;
+    }
+
+    int currentRow = 0;
+    LCD_clearScreen();
+    for (auto& pair : components) {
+        auto component = pair.second;
+        if (component != nullptr) {
+            component->render(currentRow);
+            currentRow++;
+        }
     }
 }
 
-void UIManager::deleteComponent(ComponentID id) {
-    if (hasComponent(id)) {
-        components.erase(id);
-        needsUpdate.erase(id);
-        ESP_LOGI("UIManager", "Component %d deleted successfully", id);
-    } else {
-        ESP_LOGI("UIManager", "ERROR: Unable to delete component %d, it doesn't exist", id);
+
+
+void UIManager::renderLoop() {
+    while (true) {
+        processDeletionQueue();
+
+        render();
+
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }

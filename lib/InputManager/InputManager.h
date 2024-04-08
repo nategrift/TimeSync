@@ -12,8 +12,10 @@
 enum class InputEvent {
     JOYSTICK_UP,
     JOYSTICK_DOWN,
-    BUTTON_CLICK
+    BUTTON_PRESS,
+    BUTTON_LONG_PRESS
 };
+
 
 using InputListener = std::function<void(InputEvent)>;
 

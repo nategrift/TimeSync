@@ -22,6 +22,7 @@ extern "C" {
 #include "Alarm.h"
 #include "Clock.h"
 #include "Stopwatch.h"
+#include "AppSelector.h"
 
 // END APPS
 
@@ -51,35 +52,39 @@ extern "C" void app_main() {
     Alarm* alarmApp = new Alarm(appManager);
     Stopwatch* stopWatchApp = new Stopwatch(appManager);
 
+    // Not selectable app
+    AppSelector* appSelector = new AppSelector(appManager);
+
     appManager.registerApp("Clock", clockApp);
     appManager.registerApp("Alarm", alarmApp);
     appManager.registerApp("StopWatch", stopWatchApp);
+    appManager.registerApp("AppSelector", appSelector);
 
-    appManager.launchApp("Clock");
+    appManager.launchApp("AppSelector");
 
     // Create tasks for rendering and time management
-    xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 2, NULL);
+    xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
-    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 5, NULL);
+    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
 
-    // fileManager.writeData("Alarm", "alarms.txt", "alarms=12:01");
-    // std::string alarms = fileManager.readData("Alarm", "alarms.txt");
-    // ESP_LOGI("Main", "File input: %s", alarms.c_str());
+    inputManager.addListener([&](InputEvent event) {
+    switch (event) {
+        case InputEvent::JOYSTICK_UP:
+            ESP_LOGI("InputManager", "Joystick moved up");
+            break;
+        case InputEvent::JOYSTICK_DOWN:
+            ESP_LOGI("InputManager", "Joystick moved down");
+            break;
+        case InputEvent::BUTTON_PRESS:
+            ESP_LOGI("InputManager", "Button short pressed");
+            // Handle short press
+            break;
+        case InputEvent::BUTTON_LONG_PRESS:
+            ESP_LOGI("InputManager", "Button long pressed");
+            // Handle long press, e.g., launch AppSelector
+            appManager.launchApp("AppSelector");
+            break;
+    }
+});
 
-    // TEST cases for adding input events
-    inputManager.addListener([](InputEvent event) {
-        switch (event) {
-            case InputEvent::JOYSTICK_UP:
-                ESP_LOGI("InputManager", "Joystick moved up");
-                appManager.launchNextApp();
-                break;
-            case InputEvent::JOYSTICK_DOWN:
-                ESP_LOGI("InputManager", "Joystick moved down");
-                appManager.launchPreviousApp();
-                break;
-            case InputEvent::BUTTON_CLICK:
-                ESP_LOGI("InputManager", "Button clicked");
-                break;
-        }
-    });
 }

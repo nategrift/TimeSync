@@ -1,6 +1,6 @@
 /**
  * Driver for liquid crystal arduino library
- * @source https://github.com/maxsydney/ESP32-HD44780
+ * @source https://github.com/maxsydney/ESP32-HD44780 AND then MODIFIED to update to latest ESP-IDF
  * 
  * This is a basic port of the liquid crystal arduino library for driving an LCD 
  * using the HD44780 driver and PC8574 I2C I/O expander.

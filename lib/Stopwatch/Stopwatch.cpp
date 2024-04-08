@@ -6,31 +6,25 @@
 
 Stopwatch::Stopwatch(AppManager& manager) 
     : IApp(manager), appManager(manager), isRunning(false), elapsed(0), 
-      startTime(), stopwatchDisplayId(-1), timeListenerId(-1), inputListenerId(-1) {}
+      startTime(), stopwatchTimeId(-1), stopwatchTitleId(-1), timeListenerId(-1), inputListenerId(-1) {}
 
 
 Stopwatch::~Stopwatch() {
-    if (timeListenerId != -1) {
-        TimeManager& timeManager = appManager.getTimeManager();
-        timeManager.removeTimeUpdateListener(timeListenerId);
-        timeListenerId = -1;
-    }
-    if (inputListenerId != -1) {
-        InputManager& inputManager = appManager.getInputManager();
-        inputManager.removeListener(inputListenerId);
-        inputListenerId = -1;
-    }
+    close();
 }
 
 void Stopwatch::launch() {
     UIManager& uiManager = appManager.getUIManager();
     auto textComponent = std::make_shared<TextComponent>("--:--:--.---");
-    stopwatchDisplayId = uiManager.addOrUpdateComponent(textComponent);
+    stopwatchTimeId = uiManager.addOrUpdateComponent(textComponent);
+
+    auto titleComponent = std::make_shared<TextComponent>("Stop Watch");
+    stopwatchTitleId = uiManager.addOrUpdateComponent(titleComponent);
 
     updateDisplay();
     InputManager& inputManager = appManager.getInputManager();
     inputListenerId = inputManager.addListener([this](InputEvent event) {
-        if (event == InputEvent::BUTTON_CLICK) {
+        if (event == InputEvent::BUTTON_PRESS) {
             if (this->isRunning) {
                 this->stop();
             } else {
@@ -64,7 +58,8 @@ void Stopwatch::close() {
     }
     
     UIManager& uiManager = appManager.getUIManager();
-    uiManager.deleteComponent(stopwatchDisplayId);
+    uiManager.deleteComponent(stopwatchTimeId);
+    uiManager.deleteComponent(stopwatchTitleId);
 
 }
 
@@ -94,7 +89,8 @@ void Stopwatch::updateDisplay() {
     char buffer[20];
     snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds);
     UIManager& uiManager = appManager.getUIManager();
-    uiManager.updateComponentText(stopwatchDisplayId, std::string(buffer));
+    uiManager.updateComponentText(stopwatchTimeId, std::string(buffer));
+    uiManager.updateComponentText(stopwatchTitleId, std::string("Stopwatch - ") + (isRunning ? "Running" : "Stopped"));
 }
 
 

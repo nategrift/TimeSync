@@ -48,8 +48,9 @@ void Alarm::backgroundActivity() {
             }
         }
 
-        // wait 30 seconds, we only set it based on the hour and minute. Eventually we should really be setting this to be a listener on minute change from timer
-        vTaskDelay(pdMS_TO_TICKS(30000));
+        // wait 15 seconds, we only set it based on the hour and minute. 
+        // Eventually we should really be setting this to be a listener on minute change from timer
+        vTaskDelay(pdMS_TO_TICKS(15000));
     }
 }
 
@@ -72,7 +73,6 @@ void Alarm::deleteAlarm(int hour, int minute) {
 }
 
 bool Alarm::isAlarmOn() const {
-    // Return true if there's an alarm set
     return !alarms.empty();
 }
 

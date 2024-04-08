@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 #define LCD_ADDR 0x27
 #define SDA_PIN  13
@@ -18,6 +19,8 @@ private:
     std::map<ComponentID, std::shared_ptr<IUIComponent>> components;
     std::map<ComponentID, bool> needsUpdate;
     ComponentID nextComponentId = 1;
+    std::mutex componentsMutex;
+    std::vector<ComponentID> deletionQueue;
 
 public:
     UIManager();
@@ -28,6 +31,9 @@ public:
     void updateComponentText(ComponentID id, const std::string& newText);
     void deleteComponent(ComponentID id);
     void render();
+    void renderLoop();
+    void processDeletionQueue();
 };
+
 
 #endif // UI_MANAGER_H

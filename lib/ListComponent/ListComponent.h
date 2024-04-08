@@ -3,9 +3,11 @@
 
 #include "IUIComponent.h"
 #include <memory>
-#include <vector>
+#include <map>
+#include <functional>
 
-class AppManager; // Forward declaration
+
+class AppManager;
 
 class ListComponent: public IUIComponent {
 public:
@@ -14,13 +16,17 @@ public:
 
     ElementType getType() override { return ElementType::LIST; };
 
-    void addItem(const std::shared_ptr<IUIComponent>& item);
+    void addItem(int id, const std::shared_ptr<IUIComponent>& item);
     void navigate(int direction);
 
     void render(int yOffset) override;
+
+
+    void setOnSelectCallback(const std::function<void(int)>& callback);
 private:
+    std::function<void(int)> onSelect;
     AppManager& appManager;
-    std::vector<std::shared_ptr<IUIComponent>> items;
+    std::map<int, std::shared_ptr<IUIComponent>> items;
     int currentIndex;
     int inputListenerId;
 };

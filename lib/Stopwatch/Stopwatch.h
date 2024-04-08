@@ -12,7 +12,8 @@ private:
     bool isRunning;
     long long elapsed;
     std::chrono::time_point<std::chrono::system_clock> startTime;
-    int stopwatchDisplayId;
+    int stopwatchTimeId;
+    int stopwatchTitleId;
     int timeListenerId;
     int inputListenerId;
 
