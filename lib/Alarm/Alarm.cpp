@@ -17,11 +17,21 @@ Alarm::~Alarm() {
 }
 
 /**
+ * STATE: DEFAULT 
+ * List example:
+ * - [X] 10:20 am
+ * - [ ] 11:20 pm
+ * - < New >
  * 
- * List:
- * - 10:20 am
- * - 11:20 pm
+ * STATE: NEW
+ * Once click < new >, enter the new state. 
+ * Cycle through hour, minute, am/pm by pressing button, then up and down joystick to change the minute
+ * Once selected it should return to default list
  * 
+ * STATE: OPTIONS
+ * - Enable
+ * - Disable
+ * - Delete
 */
 void Alarm::launch() {
     isLaunched = true;
