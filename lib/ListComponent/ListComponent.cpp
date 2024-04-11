@@ -47,9 +47,13 @@ void ListComponent::render(int yOffset) {
         currentIndex = it->first;
     }
 
+    auto startKey = it->first;
+
     while (count < 2) {
         if (it == items.end()) {
             it = items.begin();
+            // if we loop back to the start, exit
+            if (it->first == startKey) break;
         }
 
         it->second->render(yOffset + count);

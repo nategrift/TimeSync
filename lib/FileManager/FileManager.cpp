@@ -4,6 +4,9 @@
 #include <sys/stat.h>
 #include <iostream>
 #include "esp_log.h"
+#include <cerrno>
+#include <cstring>
+#include <string>
 
 FileManager::FileManager() {
     esp_vfs_spiffs_conf_t conf = {
@@ -56,7 +59,7 @@ std::string FileManager::readData(const std::string& app, const std::string& fil
     std::string filepath = dirPath + "/" + filename;
     std::ifstream file(filepath);
     if (!file) {
-        ESP_LOGE("FileManager", "Failed to open file with path: %s", filepath.c_str());
+        ESP_LOGE("FileManager", "Failed to open file for reading: %s", filepath.c_str());
         return "";
     }
     std::string data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());

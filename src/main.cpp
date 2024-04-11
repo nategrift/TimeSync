@@ -44,7 +44,7 @@ extern "C" void app_main() {
     static UIManager uiManager;
     static TimeManager timeManager;
     static InputManager inputManager(JOYSTICK_CHANNEL, BUTTON_PIN);
-    FileManager fileManager;
+    static FileManager fileManager;
 
     static AppManager appManager(uiManager, inputManager, timeManager, fileManager);
 
@@ -60,7 +60,7 @@ extern "C" void app_main() {
     appManager.registerApp("StopWatch", stopWatchApp);
     appManager.registerApp("AppSelector", appSelector);
 
-    appManager.launchApp("Clock");
+    appManager.launchApp("Alarm");
 
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
