@@ -73,7 +73,10 @@ void InputManager::pollInputs() {
 
 void InputManager::notifyListeners(InputEvent event) {
     for (auto& listener : listeners) {
-        listener.second(event);
+        // if we return true then do not continue
+        if (listener.second(event)) {
+            break;
+        }
     }
 }
 

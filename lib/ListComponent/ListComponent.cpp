@@ -21,7 +21,9 @@ ListComponent::ListComponent(AppManager& manager)
             default:
                 break;
         }
+        return true;
     });
+    
 }
 
 ListComponent::~ListComponent() {

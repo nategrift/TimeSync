@@ -11,6 +11,7 @@ void AppManager::launchApp(const std::string& appName) {
             // close the previous one
             IApp* currentApp = getCurrentApp();
             if (currentApp != nullptr) {
+                
                 currentApp->close();
             }
 

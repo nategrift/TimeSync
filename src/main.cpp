@@ -60,7 +60,7 @@ extern "C" void app_main() {
     appManager.registerApp("StopWatch", stopWatchApp);
     appManager.registerApp("AppSelector", appSelector);
 
-    appManager.launchApp("AppSelector");
+    appManager.launchApp("Clock");
 
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
@@ -85,6 +85,8 @@ extern "C" void app_main() {
             appManager.launchApp("AppSelector");
             break;
     }
+    // continue to other listeners
+    return false;
 });
 
 }

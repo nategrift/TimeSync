@@ -17,7 +17,7 @@ enum class InputEvent {
 };
 
 
-using InputListener = std::function<void(InputEvent)>;
+using InputListener = std::function<bool(InputEvent)>;
 
 class InputManager {
 private:

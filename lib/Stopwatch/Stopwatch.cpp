@@ -32,6 +32,7 @@ void Stopwatch::launch() {
             }
             ESP_LOGI("Stopwatch", "Stopwatch %s", this->isRunning ? "started" : "stopped");
         }
+        return true;
     });
 
     TimeManager& timeManager = appManager.getTimeManager();
@@ -90,7 +91,7 @@ void Stopwatch::updateDisplay() {
     snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds);
     UIManager& uiManager = appManager.getUIManager();
     uiManager.updateComponentText(stopwatchTimeId, std::string(buffer));
-    uiManager.updateComponentText(stopwatchTitleId, std::string("Stopwatch - ") + (isRunning ? "Running" : "Stopped"));
+    uiManager.updateComponentText(stopwatchTitleId, std::string("Stopwatch - ") + (isRunning ? "On" : "Off"));
 }
 
 

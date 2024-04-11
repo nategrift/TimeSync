@@ -16,6 +16,13 @@ Alarm::~Alarm() {
     }
 }
 
+/**
+ * 
+ * List:
+ * - 10:20 am
+ * - 11:20 pm
+ * 
+*/
 void Alarm::launch() {
     isLaunched = true;
 
