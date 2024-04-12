@@ -19,6 +19,7 @@ public:
 
     void launch();
     void close();
+    void clearUI();
     void setAlarm(int hour, int minute);
     void setAlarmEnabled(int hour, int minute, bool enabled);
     void deleteAlarm(int hour, int minute);
@@ -35,7 +36,6 @@ public:
 
 
 private:
-    bool isLaunched;
     TaskHandle_t alarmCheckTaskHandle;
     std::vector<int> activeComponents;
     std::vector<AlarmTime> alarms;

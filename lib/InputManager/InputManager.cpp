@@ -38,10 +38,10 @@ void InputManager::pollInputs() {
         int joystickValue = adc1_get_raw(joystickChannel);
 
         if (joystickValue > JOYSTICK_MIDDLE_THRESHOLD + JOYSTICK_PRECISION) {
-            notifyListeners(InputEvent::JOYSTICK_UP);
+            notifyListeners(InputEvent::JOYSTICK_DOWN);
             vTaskDelay(pdMS_TO_TICKS(600));
         } else if (joystickValue < JOYSTICK_MIDDLE_THRESHOLD - JOYSTICK_PRECISION) {
-            notifyListeners(InputEvent::JOYSTICK_DOWN);
+            notifyListeners(InputEvent::JOYSTICK_UP);
             vTaskDelay(pdMS_TO_TICKS(600));
         }
         

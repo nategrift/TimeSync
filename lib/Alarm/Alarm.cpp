@@ -1,7 +1,8 @@
 #include "Alarm.h"
 #include <sstream>
+#include "ClockComponent.h"
 
-Alarm::Alarm(AppManager& manager) : IApp(manager), isLaunched(false), alarmCheckTaskHandle(nullptr), selectedAlarmId(-1) {
+Alarm::Alarm(AppManager& manager) : IApp(manager), alarmCheckTaskHandle(nullptr), selectedAlarmId(-1) {
     deserializeAlarms();
 }
 
@@ -12,13 +13,13 @@ Alarm::~Alarm() {
 }
 
 void Alarm::launch() {
-    isLaunched = true;
     transitionToState(AlarmState::DEFAULT);
 }
 
 void Alarm::close() {
-    isLaunched = false;
-    transitionToState(AlarmState::DEFAULT);
+    clearUI();
+    // Instead of calling transitionToState, we need to just reset back to default without adding the UI components
+    currentState = AlarmState::DEFAULT;
 }
 
 void Alarm::setAlarm(int hour, int minute) {
@@ -67,11 +68,8 @@ bool Alarm::isAlarmOn() const {
 }
 
 void Alarm::transitionToState(AlarmState newState) {
-    UIManager& uiManager = appManager.getUIManager();
-    for (auto& component : activeComponents) {
-        uiManager.deleteComponent(component);
-    }
-    activeComponents.clear();
+    clearUI();
+    
     currentState = newState;
     switch (newState) {
         case AlarmState::DEFAULT:
@@ -84,6 +82,14 @@ void Alarm::transitionToState(AlarmState newState) {
             enterOptionsState();
             break;
     }
+}
+
+void Alarm::clearUI() {
+    UIManager& uiManager = appManager.getUIManager();
+    for (auto& component : activeComponents) {
+        uiManager.deleteComponent(component);
+    }
+    activeComponents.clear();
 }
 
 void Alarm::showDefaultState() {
@@ -112,10 +118,17 @@ void Alarm::showDefaultState() {
 }
 
 void Alarm::enterNewAlarmState() {
-    // Simplified pseudo-implementation. You'll need actual UI interaction handling here.
-    // For demonstration, let's just add a dummy alarm at 7:30.
-    setAlarm(alarms.size()+1, alarms.size()+4);
-    transitionToState(AlarmState::DEFAULT);
+    auto clockComponent = std::make_shared<ClockComponent>(appManager);
+    clockComponent->setOnSelectCallback([this, clockComponent](int hour, int minute, bool isAM) {
+        ESP_LOGE("Alarm", "Callback called");
+        setAlarm(hour, minute);
+        clockComponent->cleanUp();
+        transitionToState(AlarmState::DEFAULT);
+    });
+
+    UIManager& uiManager = appManager.getUIManager();
+    int clockComponentId = uiManager.addOrUpdateComponent(clockComponent);
+    activeComponents.push_back(clockComponentId);
 }
 
 void Alarm::enterOptionsState() {
@@ -125,22 +138,21 @@ void Alarm::enterOptionsState() {
     }
 
     auto optionsList = std::make_shared<ListComponent>(appManager);
-    optionsList->addItem(0, std::make_shared<TextComponent>("Enable"));
-    optionsList->addItem(1, std::make_shared<TextComponent>("Disable"));
-    optionsList->addItem(2, std::make_shared<TextComponent>("Delete"));
+    optionsList->addItem(0, std::make_shared<TextComponent>(alarms[selectedAlarmId].enabled ? "Disable" : "Enable"));
+    optionsList->addItem(1, std::make_shared<TextComponent>("Delete"));
+    optionsList->addItem(2, std::make_shared<TextComponent>("Cancel"));
 
     optionsList->setOnSelectCallback([this](int optionId) {
         switch (optionId) {
-            case 0:  // Enable
-                setAlarmEnabled(alarms[selectedAlarmId].hour, alarms[selectedAlarmId].minute, true);
+            case 0:  // Enable/Disable
+                setAlarmEnabled(alarms[selectedAlarmId].hour, alarms[selectedAlarmId].minute, !alarms[selectedAlarmId].enabled);
                 transitionToState(AlarmState::DEFAULT);
                 break;
-            case 1:  // Disable
-                setAlarmEnabled(alarms[selectedAlarmId].hour, alarms[selectedAlarmId].minute, false);
-                transitionToState(AlarmState::DEFAULT);
-                break;
-            case 2:  // Delete
+            case 1:  // Delete
                 deleteAlarm(alarms[selectedAlarmId].hour, alarms[selectedAlarmId].minute);
+                transitionToState(AlarmState::DEFAULT);
+                break;
+            case 2:  // Cancel
                 transitionToState(AlarmState::DEFAULT);
                 break;
         }
@@ -154,7 +166,7 @@ void Alarm::enterOptionsState() {
 void Alarm::backgroundActivity() {
     while(1) {
          // TODO: add alarm checks
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

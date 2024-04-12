@@ -61,6 +61,7 @@ void UIManager::deleteComponent(ComponentID id) {
     std::lock_guard<std::mutex> lock(componentsMutex);
     if (hasComponent(id)) {
         deletionQueue.push_back(id);
+        ESP_LOGE("UIManager", "Added componenet %d to delete queue", id);
     }
 }
 void UIManager::processDeletionQueue() {
@@ -74,7 +75,9 @@ void UIManager::processDeletionQueue() {
 
 
 void UIManager::render() {
+    ESP_LOGI("UIManager", "Render func");
 
+    // copy the components so we don't hold up the mutex lock
     decltype(components) componentsCopy;
     {
         std::lock_guard<std::mutex> lock(componentsMutex);
@@ -84,6 +87,7 @@ void UIManager::render() {
     int currentRow = 0;
     LCD_clearScreen();
     for (auto& pair : components) {
+        ESP_LOGI("UIManager", "Rending component with %d", pair.first);
         auto component = pair.second;
         if (component != nullptr) {
             component->render(currentRow);
