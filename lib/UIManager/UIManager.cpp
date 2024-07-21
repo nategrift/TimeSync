@@ -9,7 +9,6 @@
 extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "HD44780.h"
 #include <esp_log.h>
 #include "esp_task_wdt.h"
 }
@@ -18,7 +17,7 @@ extern "C" {
 
 
 UIManager::UIManager() {
-    LCD_init(LCD_ADDR, SDA_PIN, SCL_PIN, LCD_COLS, LCD_ROWS);
+    // LCD_init(LCD_ADDR, SDA_PIN, SCL_PIN, LCD_COLS, LCD_ROWS);
 }
 
 void UIManager::renderTask(void *param) {
@@ -75,7 +74,7 @@ void UIManager::processDeletionQueue() {
 
 
 void UIManager::render() {
-    ESP_LOGI("UIManager", "Render func");
+    // ESP_LOGI("UIManager", "Render func");
 
     // copy the components so we don't hold up the mutex lock
     decltype(components) componentsCopy;
@@ -85,9 +84,8 @@ void UIManager::render() {
     }
 
     int currentRow = 0;
-    LCD_clearScreen();
+    // LCD_clearScreen();
     for (auto& pair : components) {
-        ESP_LOGI("UIManager", "Rending component with %d", pair.first);
         auto component = pair.second;
         if (component != nullptr) {
             component->render(currentRow);

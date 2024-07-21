@@ -21,7 +21,7 @@ using InputListener = std::function<bool(InputEvent)>;
 
 class InputManager {
 private:
-    adc1_channel_t joystickChannel;
+    adc2_channel_t joystickChannel;
     gpio_num_t buttonPin;
 
     std::map<int, InputListener> listeners;
@@ -32,7 +32,7 @@ private:
     void notifyListeners(InputEvent event);
 
 public:
-    InputManager(adc1_channel_t joystickChannel, gpio_num_t btnPin);
+    InputManager(adc2_channel_t joystickChannel, gpio_num_t btnPin);
 
     static void inputTask(void* arg);
     

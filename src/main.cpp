@@ -4,7 +4,7 @@ extern "C" {
 #include "freertos/task.h"
 #include <stdio.h>
 #include "sdkconfig.h"
-#include "HD44780.h"
+// #include "HD44780.h"
 }
 
 #include "UIManager.h"
@@ -27,8 +27,8 @@ extern "C" {
 // END APPS
 
 // Define GPIO pins for the joystick and button
-#define JOYSTICK_CHANNEL ADC1_CHANNEL_7
-#define BUTTON_PIN GPIO_NUM_12
+#define JOYSTICK_CHANNEL ADC2_CHANNEL_4
+#define BUTTON_PIN GPIO_NUM_16
 
 #define configUSE_TRACE_FACILITY 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
