@@ -12,6 +12,7 @@ extern "C" {
 #include "TextComponent.h"
 #include "InputManager.h"
 #include "FileManager.h"
+#include "GraphicsDriver.h"
 
 #include <string>
 
@@ -23,7 +24,7 @@ extern "C" {
 #include "Clock.h"
 #include "Stopwatch.h"
 #include "AppSelector.h"
-
+#include "lvgl.h"
 // END APPS
 
 // Define GPIO pins for the joystick and button
@@ -32,6 +33,8 @@ extern "C" {
 
 #define configUSE_TRACE_FACILITY 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
+#define TAG "main"
 
 
 #define traceTASK_SWITCHED_IN() {\
@@ -68,25 +71,40 @@ extern "C" void app_main() {
     xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
 
     inputManager.addListener([&](InputEvent event) {
-    switch (event) {
-        case InputEvent::JOYSTICK_UP:
-            ESP_LOGI("InputManager", "Joystick moved up");
-            break;
-        case InputEvent::JOYSTICK_DOWN:
-            ESP_LOGI("InputManager", "Joystick moved down");
-            break;
-        case InputEvent::BUTTON_PRESS:
-            ESP_LOGI("InputManager", "Button short pressed");
-            // Handle short press
-            break;
-        case InputEvent::BUTTON_LONG_PRESS:
-            ESP_LOGI("InputManager", "Button long pressed");
-            // Handle long press, e.g., launch AppSelector
-            appManager.launchApp("AppSelector");
-            break;
-    }
-    // continue to other listeners
-    return false;
-});
+        switch (event) {
+            case InputEvent::JOYSTICK_UP:
+                ESP_LOGI("InputManager", "Joystick moved up");
+                break;
+            case InputEvent::JOYSTICK_DOWN:
+                ESP_LOGI("InputManager", "Joystick moved down");
+                break;
+            case InputEvent::BUTTON_PRESS:
+                ESP_LOGI("InputManager", "Button short pressed");
+                // Handle short press
+                break;
+            case InputEvent::BUTTON_LONG_PRESS:
+                ESP_LOGI("InputManager", "Button long pressed");
+                // Handle long press, e.g., launch AppSelector
+                appManager.launchApp("AppSelector");
+                break;
+        }
+        // continue to other listeners
+        return false;
+    });
+    ESP_LOGI(TAG, "Initializing GPIO");
 
+    // Initialize GPIO
+    gpio_set_direction(LCD_BL_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_direction(EXAMPLE_PIN_NUM_LCD_RST, GPIO_MODE_OUTPUT);
+
+    // Turn on the backlight
+    ESP_LOGI(TAG, "Turning on the backlight");
+    gpio_set_level(LCD_BL_GPIO, 1);
+
+    // Initialize GraphicsDriver
+    GraphicsDriver graphicsDriver;
+    graphicsDriver.init();
+
+    // Add text to the center of the screen
+    graphicsDriver.addTextToCenter("Hello World.");
 }
