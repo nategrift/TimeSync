@@ -24,7 +24,7 @@
 #include "esp_log.h"
 #include "lvgl.h"
 /* MACROS --------------------------------------------------------------------*/
-#define EXAMPLE_LVGL_TICK_PERIOD_MS    2
+#define LVGL_TICK_PERIOD_MS    2
 /* ENUMORATIONS --------------------------------------------------------------*/
 
 /* STRUCTURES & TYPEDEFS -----------------------------------------------------*/
