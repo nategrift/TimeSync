@@ -1,112 +1,142 @@
-// TouchDriver.cpp
 #include "TouchDriver.h"
-#include "esp_log.h"
 
-static const char *TAG = "TOUCH_SETUP";
+#define I2C_SCL GPIO_NUM_7
+#define I2C_SDA GPIO_NUM_6
+#define I2C_NUM I2C_NUM_0
+#define RST_GPIO GPIO_NUM_13
+#define INT_GPIO GPIO_NUM_5
 
-static SemaphoreHandle_t touch_mux;
-static esp_lcd_touch_handle_t tp = NULL;
+static const char *TAG = "TouchDriver";
 
-TouchDriver::TouchDriver() {
-}
+TouchDriver::TouchDriver() {}
 
-TouchDriver::~TouchDriver() {
-    if (touch_mux != nullptr) {
-        vSemaphoreDelete(touch_mux);
-    }
-}
+TouchDriver::~TouchDriver() {}
 
-void TouchDriver::init() {
-    esp_lcd_panel_io_handle_t tp_io_handle = nullptr;
+esp_err_t TouchDriver::init() {
+    esp_err_t ret;
 
-    i2c_config_t i2c_conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_SDA,
-        .scl_io_num = I2C_SCL,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-    };
-
-    i2c_conf.master.clk_speed = 400000;
-
-    ESP_LOGI(TAG, "Initializing I2C for display touch");
-    ESP_ERROR_CHECK(i2c_param_config(I2C_NUM, &i2c_conf));
-    ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM, i2c_conf.mode, 0, 0, 0));
-
-    esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_CST816S_CONFIG();
-    ESP_LOGI(TAG, "esp_lcd_new_panel_io_i2c");
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c_v1(I2C_NUM, &tp_io_config, &tp_io_handle));
-
-    // Create the semaphore
-    touch_mux = xSemaphoreCreateBinary();
-    if (touch_mux == nullptr) {
-        ESP_LOGE(TAG, "Failed to create touch mutex");
-        return;
+    // Initialize I2C
+    ret = i2cMasterInit();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "I2C init failed");
+        return ret;
     }
 
-    esp_lcd_touch_config_t tp_cfg = {
-        .x_max = 240,
-        .y_max = 240,
-        .rst_gpio_num = RST_GPIO,
-        .int_gpio_num = INT_GPIO,
-        .levels = {
-            .reset = 0,
-            .interrupt = 0,
-        },
-        .flags = {
-            .swap_xy = 1,
-            .mirror_x = 0,
-            .mirror_y = 1,
-        },
-        .interrupt_callback = touchCallback,
-    };
+    // Reset the touch chip
+    ret = reset();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Reset failed");
+        return ret;
+    }
 
-    ESP_LOGI(TAG, "esp_lcd_touch_new_i2c_cst816s");
-    ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_cst816s(tp_io_handle, &tp_cfg, &tp));
+    ESP_LOGI(TAG, "Touch driver initialized successfully");
+    return ESP_OK;
 }
 
-void TouchDriver::initTouchForGraphics() {
-    if (tp != nullptr) {
-        lv_indev_drv_t indev_drv;
-        lv_indev_drv_init(&indev_drv);
-        indev_drv.type = LV_INDEV_TYPE_POINTER;
-        indev_drv.read_cb = touchpadRead;
-        indev_drv.user_data = tp;
-        lv_indev_drv_register(&indev_drv);
+esp_err_t TouchDriver::i2cMasterInit() {
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = I2C_SDA;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num = I2C_SCL;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = 400000;
+    conf.clk_flags = 0;
+
+    esp_err_t ret = i2c_param_config(I2C_NUM, &conf);
+    if (ret != ESP_OK) {
+        return ret;
+    }
+
+    return i2c_driver_install(I2C_NUM, conf.mode, 0, 0, 0);
+}
+
+esp_err_t TouchDriver::reset() {
+    gpio_set_direction(RST_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(RST_GPIO, 0);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    gpio_set_level(RST_GPIO, 1);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    return ESP_OK;
+}
+
+esp_err_t TouchDriver::readRegister(uint8_t reg, uint8_t *data, size_t len) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (I2C_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (I2C_ADDR << 1) | I2C_MASTER_READ, true);
+    i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+esp_err_t TouchDriver::writeRegister(uint8_t reg, uint8_t *data, size_t len) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, (I2C_ADDR << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd, reg, true);
+    i2c_master_write(cmd, data, len, true);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM, cmd, 1000 / portTICK_PERIOD_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
+void TouchDriver::readTouchData() {
+    uint8_t data[6];
+    esp_err_t ret = readRegister(0x01, data, 6);
+    if (ret == ESP_OK) {
+        if (data[1] == 0x01) { // Check if touch is detected
+            printTouchCoordinates(data);
+        }
     } else {
-        ESP_LOGE(TAG, "Failed to init touch for graphics, touch_handle was false. Call init() fist.");
+        ESP_LOGE(TAG, "Failed to read touch data");
     }
-
 }
 
-void TouchDriver::touchpadRead(lv_indev_drv_t *drv, lv_indev_data_t *data) {
-    uint16_t touchpad_x[1] = {0};
-    uint16_t touchpad_y[1] = {0};
-    uint8_t touchpad_cnt = 0;
+void TouchDriver::printTouchCoordinates(const uint8_t *data) {
+    // Assuming data format from the datasheet: 
+    // Byte 0: Gesture ID
+    // Byte 1: Event Flag
+    // Byte 2: X High Byte
+    // Byte 3: X Low Byte
+    // Byte 4: Y High Byte
+    // Byte 5: Y Low Byte
 
-    if (xSemaphoreTake(touch_mux, 0) == pdTRUE) {
-        esp_lcd_touch_read_data((esp_lcd_touch_handle_t)drv->user_data);
-        xSemaphoreGive(touch_mux);
+    uint16_t x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
+    uint16_t y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates
+
+    // Print coordinates
+    // ESP_LOGI(TAG, "Touch at X: %d, Y: %d", x, y);
+
+    // Print gesture ID
+    // ESP_LOGI(TAG, "Gesture ID: 0x%02x", data[0]);
+}
+
+bool TouchDriver::getTouchCoordinates(uint16_t &x, uint16_t &y) {
+    uint8_t data[6];
+    esp_err_t ret = readRegister(0x01, data, 6);
+    if (ret == ESP_OK && data[1] == 0x01) { // Check if touch is detected
+        x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
+        y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates
+        return true;
     }
+    return false;
+}
 
-    bool touchpad_pressed = esp_lcd_touch_get_coordinates((esp_lcd_touch_handle_t)drv->user_data, touchpad_x, touchpad_y, nullptr, &touchpad_cnt, 1);
-
-    if (touchpad_pressed && touchpad_cnt > 0) {
-        data->point.x = touchpad_x[0];
-        data->point.y = touchpad_y[0];
-        data->state = LV_INDEV_STATE_PRESSED;
-        printf("data->point.x = %u \n", data->point.x);
-        printf("data->point.y = %u \n", data->point.y);
+void TouchDriver::lvglRead(lv_indev_drv_t *drv, lv_indev_data_t *data) {
+    uint16_t x, y;
+    
+    bool touched = getTouchCoordinates(x, y);
+    if (touched) {
+        data->point.x = x;
+        data->point.y = y;
+        data->state = LV_INDEV_STATE_PR;
     } else {
-        data->state = LV_INDEV_STATE_RELEASED;
-    }
-}
-
-void TouchDriver::touchCallback(esp_lcd_touch_handle_t tp) {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(touch_mux, &xHigherPriorityTaskWoken);
-
-    if (xHigherPriorityTaskWoken) {
-        portYIELD_FROM_ISR();
+        data->state = LV_INDEV_STATE_REL;
     }
 }

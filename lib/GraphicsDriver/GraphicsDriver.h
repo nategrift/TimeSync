@@ -13,6 +13,7 @@ extern "C" {
 #include "gc9a01.h"
 }
 
+#include "TouchDriver.h"
 
 
 class GraphicsDriver {
@@ -23,6 +24,7 @@ public:
     GraphicsDriver();
     void init();
     void addTextToCenter(const char *text);
+    void setupTouchDriver(TouchDriver &touchDriver);
 };
 
 #endif // GRAPHICS_DRIVER_H

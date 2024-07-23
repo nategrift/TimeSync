@@ -9,13 +9,13 @@ GraphicsDriver::GraphicsDriver() {
 }
 
 void GraphicsDriver::init() {
-    TouchDriver touchDriver;
-    touchDriver.init();
+    // TouchDriver touchDriver;
+    // touchDriver.init();
     
     gc9a01_displayInit();
     lvglDisplayConfig();
 
-    touchDriver.initTouchForGraphics();
+    // touchDriver.initTouchForGraphics();
 
     // // Create LVGL task
     xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 10000, NULL, 4, NULL, 1);
@@ -64,3 +64,16 @@ void GraphicsDriver::addTextToCenter(const char* text) {
 
 }
 
+
+void GraphicsDriver::setupTouchDriver(TouchDriver &touchDriver) {
+    // Initialize LVGL input device driver
+    static lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_POINTER;
+    indev_drv.read_cb = [](lv_indev_drv_t *drv, lv_indev_data_t *data) {
+        TouchDriver *touch = static_cast<TouchDriver*>(drv->user_data);
+        touch->lvglRead(drv, data);
+    };
+    indev_drv.user_data = &touchDriver;
+    lv_indev_t *my_indev = lv_indev_drv_register(&indev_drv);
+}

@@ -108,4 +108,14 @@ extern "C" void app_main() {
 
     // Add text to the center of the screen
     graphicsDriver.addTextToCenter("Hello World.");
+
+    TouchDriver touchDriver;
+    if (touchDriver.init() == ESP_OK) {
+        graphicsDriver.setupTouchDriver(touchDriver);
+        while (true) {
+            touchDriver.readTouchData();
+            vTaskDelay(pdMS_TO_TICKS(30));
+        }
+    }
+
 }
