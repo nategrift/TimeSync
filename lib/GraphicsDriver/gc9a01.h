@@ -36,22 +36,22 @@
 // Pin configuration
 #define LCD_BL_GPIO GPIO_NUM_2
 #define LCD_HOST  SPI2_HOST
-#define LCD_PIXEL_CLOCK_HZ     (20 * 1000 * 1000)
-#define LCD_BK_LIGHT_ON_LEVEL  1
-#define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
-#define PIN_NUM_SCLK           GPIO_NUM_10
-#define PIN_NUM_MOSI           GPIO_NUM_11
-#define PIN_NUM_MISO           GPIO_NUM_12
-#define PIN_NUM_LCD_DC         GPIO_NUM_8
-#define PIN_NUM_LCD_RST        GPIO_NUM_14
-#define PIN_NUM_LCD_CS         GPIO_NUM_9
-#define PIN_NUM_BK_LIGHT       GPIO_NUM_2
+#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (20 * 1000 * 1000)
+#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
+#define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
+#define EXAMPLE_PIN_NUM_SCLK           GPIO_NUM_10
+#define EXAMPLE_PIN_NUM_MOSI           GPIO_NUM_11
+#define EXAMPLE_PIN_NUM_MISO           GPIO_NUM_12
+#define EXAMPLE_PIN_NUM_LCD_DC         GPIO_NUM_8
+#define EXAMPLE_PIN_NUM_LCD_RST        GPIO_NUM_14
+#define EXAMPLE_PIN_NUM_LCD_CS         GPIO_NUM_9
+#define EXAMPLE_PIN_NUM_BK_LIGHT       GPIO_NUM_2
 
-#define LCD_H_RES              240
-#define LCD_V_RES              240
+#define EXAMPLE_LCD_H_RES              240
+#define EXAMPLE_LCD_V_RES              240
 
-#define LCD_CMD_BITS           8
-#define LCD_PARAM_BITS         8
+#define EXAMPLE_LCD_CMD_BITS           8
+#define EXAMPLE_LCD_PARAM_BITS         8
 
 
 

@@ -13,6 +13,7 @@ extern "C" {
 #include "InputManager.h"
 #include "FileManager.h"
 #include "GraphicsDriver.h"
+#include "TouchDriver.h"
 
 #include <string>
 
@@ -95,7 +96,7 @@ extern "C" void app_main() {
 
     // Initialize GPIO
     gpio_set_direction(LCD_BL_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_direction(PIN_NUM_LCD_RST, GPIO_MODE_OUTPUT);
+    gpio_set_direction(EXAMPLE_PIN_NUM_LCD_RST, GPIO_MODE_OUTPUT);
 
     // Turn on the backlight
     ESP_LOGI(TAG, "Turning on the backlight");
