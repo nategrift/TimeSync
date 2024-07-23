@@ -9,6 +9,7 @@
 #include "UIManager.h"
 #include "TimeManager.h"
 #include "FileManager.h"
+#include "BatteryManager.h"
 
 
 class AppManager {
@@ -19,12 +20,13 @@ private:
     InputManager& inputManager;
     TimeManager& timeManager;
     FileManager& fileManager;
+    BatteryManager& batteryManager;
 
     void launchAppAtIndex(size_t index);
 
 public:
-    AppManager(UIManager& uiManager, InputManager& inputManager, TimeManager& timeManager, FileManager& fileManager) : 
-        uiManager(uiManager), inputManager(inputManager), timeManager(timeManager), fileManager(fileManager) {}
+    AppManager(UIManager& uiManager, InputManager& inputManager, TimeManager& timeManager, FileManager& fileManager, BatteryManager& batteryManager) : 
+        uiManager(uiManager), inputManager(inputManager), timeManager(timeManager), fileManager(fileManager), batteryManager(batteryManager) {}
 
 
     void registerApp(const std::string& name, IApp* app);
@@ -39,6 +41,7 @@ public:
     InputManager& getInputManager() {return inputManager;}
     TimeManager& getTimeManager() {return timeManager;}
     FileManager& getFileManager() {return fileManager;}
+    BatteryManager& getBatteryManager() {return batteryManager;}
 
 };
 

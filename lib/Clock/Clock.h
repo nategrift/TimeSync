@@ -8,15 +8,19 @@
 #include "freertos/task.h"
 #include "AppManager.h"
 #include "IApp.h"
-#include <memory>
+#include "lvgl.h"
 
 class Clock : public IApp {
 private:
-    int clockTitle_UI;
-    int clockTime_UI;
     TimeManager::ListenerId timeListenerId;
+    lv_obj_t* clockTimeLabel;
+    lv_obj_t* clockTitleLabel;
+    lv_obj_t* batteryLabel;
+    lv_obj_t* batteryIcon;
+    BatteryManager& batteryManager;
 
     void handleTimeUpdate(const struct tm& timeinfo);
+    void updateBatteryLevel();
 
 public:
     Clock(AppManager& manager);

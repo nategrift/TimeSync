@@ -12,6 +12,8 @@ extern "C" {
 #include "TextComponent.h"
 #include "InputManager.h"
 #include "FileManager.h"
+#include "BatteryManager.h"
+
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
 
@@ -45,12 +47,17 @@ extern "C" {
 }
 
 extern "C" void app_main() {
+    // Initialize GraphicsDriver
+    GraphicsDriver graphicsDriver;
+    graphicsDriver.init();
+
     static UIManager uiManager;
     static TimeManager timeManager;
     static InputManager inputManager(JOYSTICK_CHANNEL, BUTTON_PIN);
     static FileManager fileManager;
+    static BatteryManager batteryManager;
 
-    static AppManager appManager(uiManager, inputManager, timeManager, fileManager);
+    static AppManager appManager(uiManager, inputManager, timeManager, fileManager, batteryManager);
 
     Clock* clockApp = new Clock(appManager);
     Alarm* alarmApp = new Alarm(appManager);
@@ -69,7 +76,9 @@ extern "C" void app_main() {
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
-    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
+
+    // DISABLED INPUT CURRENLTY, moved to touch screen
+    // xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
 
     inputManager.addListener([&](InputEvent event) {
         switch (event) {
@@ -101,13 +110,6 @@ extern "C" void app_main() {
     // Turn on the backlight
     ESP_LOGI(TAG, "Turning on the backlight");
     gpio_set_level(LCD_BL_GPIO, 1);
-
-    // Initialize GraphicsDriver
-    GraphicsDriver graphicsDriver;
-    graphicsDriver.init();
-
-    // Add text to the center of the screen
-    graphicsDriver.addTextToCenter("Hello World.");
 
     TouchDriver touchDriver;
     if (touchDriver.init() == ESP_OK) {
