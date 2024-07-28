@@ -25,7 +25,7 @@ extern "C" {
 
 // #include "Alarm.h"
 #include "Clock.h"
-// #include "Stopwatch.h"
+#include "Stopwatch.h"
 #include "AppSelector.h"
 #include "lvgl.h"
 // END APPS
@@ -66,14 +66,14 @@ extern "C" void app_main() {
 
     Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);
-    // Stopwatch* stopWatchApp = new Stopwatch(appManager);
+    Stopwatch* stopWatchApp = new Stopwatch(appManager);
 
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
     appManager.registerApp("Clock", clockApp);
     // appManager.registerApp("Alarm", alarmApp);
-    // appManager.registerApp("StopWatch", stopWatchApp);
+    appManager.registerApp("StopWatch", stopWatchApp);
     appManager.registerApp("AppSelector", appSelector);
 
     appManager.launchApp("AppSelector");
@@ -83,19 +83,8 @@ extern "C" void app_main() {
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
 
     // DISABLED INPUT CURRENLTY, moved to touch screen
-    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
+    // xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
 
-    // inputManager.addListener([&](InputEvent event) {
-    //     switch (event) {
-    //         case InputEvent::BUTTON_LONG_PRESS:
-    //             ESP_LOGI("InputManager", "Button long pressed");
-    //             // Handle long press, e.g., launch AppSelector
-    //             appManager.launchApp("AppSelector");
-    //             break;
-    //     }
-    //     // continue to other listeners
-    //     return false;
-    // });
     
     ESP_LOGI(TAG, "Initializing GPIO");
 

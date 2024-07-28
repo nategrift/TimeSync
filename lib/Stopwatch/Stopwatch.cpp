@@ -3,43 +3,82 @@
 #include <chrono>
 #include <esp_log.h>
 #include <memory>
+#include "LvglMutex.h"
+#include "app_screen.h"
+
 
 Stopwatch::Stopwatch(AppManager& manager) 
-    : IApp(manager), appManager(manager), isRunning(false), elapsed(0), 
-      startTime(), stopwatchTimeId(-1), stopwatchTitleId(-1), timeListenerId(-1), inputListenerId(-1) {}
+    : IApp("StopWatch"), appManager(manager), isRunning(false), elapsed(0), 
+      startTime(), timeListenerId(-1), screenObj(NULL), timeLabel(NULL), toggleButtonLabel(NULL) {}
 
 
 Stopwatch::~Stopwatch() {
-    close();
+    
+}
+
+void Stopwatch::toggle_event_handler(lv_event_t * e)
+{
+    Stopwatch* stopwatch = (Stopwatch*)lv_event_get_user_data(e);
+    if (stopwatch->isRunning) {
+        stopwatch->stop();
+    } else {
+        stopwatch->start();
+    }
 }
 
 void Stopwatch::launch() {
-    UIManager& uiManager = appManager.getUIManager();
-    auto textComponent = std::make_shared<TextComponent>("--:--:--.---");
-    stopwatchTimeId = uiManager.addOrUpdateComponent(textComponent);
 
-    auto titleComponent = std::make_shared<TextComponent>("Stop Watch");
-    stopwatchTitleId = uiManager.addOrUpdateComponent(titleComponent);
+    screenObj = get_app_container(appManager);
+
+    // Create LVGL labels
+    lv_obj_t* clockTitleLabel = lv_label_create(screenObj);
+    lv_label_set_text(clockTitleLabel, "StopWatch");
+    lv_obj_align(clockTitleLabel, LV_ALIGN_TOP_MID, 0, 10); // Align title at the top middle
+
+    // Set the style for the clock title
+    static lv_style_t style_title;
+    lv_style_init(&style_title);
+    lv_style_set_text_color(&style_title, lv_color_hex(0xFF0000)); // Red color
+    lv_obj_add_style(clockTitleLabel, &style_title, 0);
+
+
+    timeLabel = lv_label_create(screenObj);
+    lv_label_set_text(timeLabel, "00:00:00.000");
+    lv_obj_align(timeLabel, LV_ALIGN_CENTER, 0, 0); // Align time in the center
+
+    // Set the style for the clock time
+    static lv_style_t style_time;
+    lv_style_init(&style_time);
+    lv_style_set_text_color(&style_time, lv_color_hex(0xFFFFFF)); // White color
+    lv_style_set_text_font(&style_time, &lv_font_montserrat_30); // Font size (twice the default size)
+    lv_obj_add_style(timeLabel, &style_time, 0);
+
+    // button
+    lv_obj_t* toggleButton = lv_btn_create(lv_scr_act());
+    lv_obj_add_event_cb(toggleButton, toggle_event_handler, LV_EVENT_VALUE_CHANGED, this);
+    lv_obj_align(toggleButton, LV_ALIGN_CENTER, 0, 70);
+    lv_obj_add_flag(toggleButton, LV_OBJ_FLAG_CHECKABLE);
+    lv_obj_set_height(toggleButton, LV_SIZE_CONTENT);
+
+    toggleButtonLabel = lv_label_create(toggleButton);
+    lv_label_set_text(toggleButtonLabel, "Start");
+    lv_obj_center(toggleButtonLabel);
+
+    // add style
+    static lv_style_t button_style;
+    lv_style_init(&button_style);
+    lv_style_set_text_font(&button_style, &lv_font_montserrat_16);
+    lv_obj_add_style(toggleButtonLabel, &button_style, 0);
 
     updateDisplay();
-    InputManager& inputManager = appManager.getInputManager();
-    inputListenerId = inputManager.addListener([this](InputEvent event) {
-        // if (event == InputEvent::BUTTON_PRESS) {
-        //     if (this->isRunning) {
-        //         this->stop();
-        //     } else {
-        //         this->start();
-        //     }
-        //     ESP_LOGI("Stopwatch", "Stopwatch %s", this->isRunning ? "started" : "stopped");
-        // }
-        return true;
-    });
 
     TimeManager& timeManager = appManager.getTimeManager();
     timeListenerId = timeManager.addTimeUpdateListener([this](const struct tm& timeinfo) {
         if (this->isRunning) {
             this->elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - this->startTime).count();
+            LvglMutex::lock();
             this->updateDisplay();
+            LvglMutex::unlock();
         }
     });
 }
@@ -52,15 +91,7 @@ void Stopwatch::close() {
         timeListenerId = -1;
     }
 
-    if (inputListenerId != -1) {
-        InputManager& inputManager = appManager.getInputManager();
-        inputManager.removeListener(inputListenerId);
-        inputListenerId = -1;
-    }
-    
-    UIManager& uiManager = appManager.getUIManager();
-    uiManager.deleteComponent(stopwatchTimeId);
-    uiManager.deleteComponent(stopwatchTitleId);
+    // TODO: delete Display
 
 }
 
@@ -89,9 +120,14 @@ void Stopwatch::updateDisplay() {
 
     char buffer[20];
     snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d.%03d", hours, minutes, seconds, milliseconds);
-    UIManager& uiManager = appManager.getUIManager();
-    uiManager.updateComponentText(stopwatchTimeId, std::string(buffer));
-    uiManager.updateComponentText(stopwatchTitleId, std::string("Stopwatch - ") + (isRunning ? "On" : "Off"));
+    if (timeLabel && lv_obj_is_valid(timeLabel)) {
+        lv_label_set_text(timeLabel, buffer);
+    }
+
+    if (toggleButtonLabel && lv_obj_is_valid(toggleButtonLabel)) {
+       lv_label_set_text(toggleButtonLabel, + (isRunning ? "Stop" : "Start"));
+    }
+
 }
 
 

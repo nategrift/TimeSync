@@ -113,7 +113,7 @@ void AppSelector::launch() {
     lv_obj_align(btn_clock, LV_ALIGN_CENTER, 0, 0);
     lv_obj_t* btn_alarm = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Alarm");
     lv_obj_add_style(btn_alarm, &style_btn, LV_PART_MAIN);
-    lv_obj_t* btn_stopwatch = lv_list_add_btn(screenObj, LV_SYMBOL_FILE, "Stopwatch");
+    lv_obj_t* btn_stopwatch = lv_list_add_btn(screenObj, LV_SYMBOL_FILE, "StopWatch");
     lv_obj_add_style(btn_stopwatch, &style_btn, LV_PART_MAIN);
 
 
@@ -124,11 +124,11 @@ void AppSelector::launch() {
 
         if (code == LV_EVENT_CLICKED) {
             AppSelector* appSelector = reinterpret_cast<AppSelector*>(lv_event_get_user_data(event));
-            // const char* selected = lv_list_get_btn_text(target);
-            // ESP_LOGI("AppSelector", "AppSelector chooses app id of %s", selected);
+            const char* selected = lv_list_get_btn_text(appSelector->screenObj, target);
+            ESP_LOGI("AppSelector", "AppSelector chooses app id of %s", selected);
             if (appSelector != nullptr) {
-                // std::string selectedApp(selected);
-                appSelector->appManager.launchApp("Clock");
+                std::string selectedApp(selected);
+                appSelector->appManager.launchApp(selectedApp);
             }
         }
     };

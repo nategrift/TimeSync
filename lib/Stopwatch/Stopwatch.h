@@ -12,10 +12,11 @@ private:
     bool isRunning;
     long long elapsed;
     std::chrono::time_point<std::chrono::system_clock> startTime;
-    int stopwatchTimeId;
-    int stopwatchTitleId;
     int timeListenerId;
-    int inputListenerId;
+
+    lv_obj_t* screenObj;
+    lv_obj_t* timeLabel;
+    lv_obj_t* toggleButtonLabel;
 
 public:
     Stopwatch(AppManager& manager);
@@ -24,6 +25,8 @@ public:
     void launch() override;
     void close() override;
     void backgroundActivity() override;
+
+    static void toggle_event_handler(lv_event_t * e);
 
     void start();
     void stop();
