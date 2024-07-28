@@ -86,55 +86,27 @@ esp_err_t TouchDriver::writeRegister(uint8_t reg, uint8_t *data, size_t len) {
     return ret;
 }
 
-void TouchDriver::readTouchData() {
+TouchData TouchDriver::getTouchCoordinates() {
     uint8_t data[6];
     esp_err_t ret = readRegister(0x01, data, 6);
     if (ret == ESP_OK) {
-        if (data[1] == 0x01) { // Check if touch is detected
-            printTouchCoordinates(data);
-        }
+        TouchData touchData;
+        touchData.touch_detected = (data[1] == 0x01);
+        touchData.gesture_id = data[0];
+        touchData.x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
+        touchData.y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates
+        return touchData;
     } else {
         ESP_LOGE(TAG, "Failed to read touch data");
     }
-}
-
-void TouchDriver::printTouchCoordinates(const uint8_t *data) {
-    // Assuming data format from the datasheet: 
-    // Byte 0: Gesture ID
-    // Byte 1: Event Flag
-    // Byte 2: X High Byte
-    // Byte 3: X Low Byte
-    // Byte 4: Y High Byte
-    // Byte 5: Y Low Byte
-
-    uint16_t x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
-    uint16_t y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates
-
-    // Print coordinates
-    // ESP_LOGI(TAG, "Touch at X: %d, Y: %d", x, y);
-
-    // Print gesture ID
-    // ESP_LOGI(TAG, "Gesture ID: 0x%02x", data[0]);
-}
-
-bool TouchDriver::getTouchCoordinates(uint16_t &x, uint16_t &y) {
-    uint8_t data[6];
-    esp_err_t ret = readRegister(0x01, data, 6);
-    if (ret == ESP_OK && data[1] == 0x01) { // Check if touch is detected
-        x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
-        y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates
-        return true;
-    }
-    return false;
+    return TouchData();
 }
 
 void TouchDriver::lvglRead(lv_indev_drv_t *drv, lv_indev_data_t *data) {
-    uint16_t x, y;
-    
-    bool touched = getTouchCoordinates(x, y);
-    if (touched) {
-        data->point.x = x;
-        data->point.y = y;
+    TouchData touch = getTouchCoordinates();
+    if (touch.touch_detected) {
+        data->point.x = touch.x;
+        data->point.y = touch.y;
         data->state = LV_INDEV_STATE_PR;
     } else {
         data->state = LV_INDEV_STATE_REL;

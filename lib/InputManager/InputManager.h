@@ -7,12 +7,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_adc_cal.h"
+#include "TouchDriver.h"
 
 // Current types of input events right now
 enum class InputEvent {
-    JOYSTICK_UP,
-    JOYSTICK_DOWN,
-    BUTTON_PRESS,
     BUTTON_LONG_PRESS
 };
 
@@ -21,18 +19,17 @@ using InputListener = std::function<bool(InputEvent)>;
 
 class InputManager {
 private:
-    adc2_channel_t joystickChannel;
-    gpio_num_t buttonPin;
-
     std::map<int, InputListener> listeners;
     int nextId = 0; 
+
+    TouchDriver& touchDriver;
 
 
     void pollInputs();
     void notifyListeners(InputEvent event);
 
 public:
-    InputManager(adc2_channel_t joystickChannel, gpio_num_t btnPin);
+    InputManager(TouchDriver& touchDriver);
 
     static void inputTask(void* arg);
     

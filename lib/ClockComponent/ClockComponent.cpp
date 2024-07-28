@@ -12,28 +12,28 @@ ClockComponent::ClockComponent(AppManager& manager) : appManager(manager), input
 
     inputListenerId = appManager.getInputManager().addListener([this](InputEvent event) {
         ESP_LOGI("ClockComponent", "Input");
-        switch (event) {
-            case InputEvent::JOYSTICK_UP:
-                if (state == State::HOUR) incrementHour(1);
-                else if (state == State::MINUTE) incrementMinute(1);
-                else if (state == State::AMPM) toggleAMPM();
-                break;
-            case InputEvent::JOYSTICK_DOWN:
-                if (state == State::HOUR) incrementHour(-1);
-                else if (state == State::MINUTE) incrementMinute(-1);
-                else if (state == State::AMPM) toggleAMPM();
-                break;
-            case InputEvent::BUTTON_PRESS:
-                if (state == State::HOUR) state = State::MINUTE;
-                else if (state == State::MINUTE) state = State::AMPM;
-                else if (state == State::AMPM) {
-                    state = State::HOUR;
-                    if (onSelect != nullptr) onSelect(hour, minute, isAM);
-                }
-                break;
-            default:
-                break;
-        }
+        // switch (event) {
+        //     case InputEvent::JOYSTICK_UP:
+        //         if (state == State::HOUR) incrementHour(1);
+        //         else if (state == State::MINUTE) incrementMinute(1);
+        //         else if (state == State::AMPM) toggleAMPM();
+        //         break;
+        //     case InputEvent::JOYSTICK_DOWN:
+        //         if (state == State::HOUR) incrementHour(-1);
+        //         else if (state == State::MINUTE) incrementMinute(-1);
+        //         else if (state == State::AMPM) toggleAMPM();
+        //         break;
+        //     case InputEvent::BUTTON_PRESS:
+        //         if (state == State::HOUR) state = State::MINUTE;
+        //         else if (state == State::MINUTE) state = State::AMPM;
+        //         else if (state == State::AMPM) {
+        //             state = State::HOUR;
+        //             if (onSelect != nullptr) onSelect(hour, minute, isAM);
+        //         }
+        //         break;
+        //     default:
+        //         break;
+        // }
         return true;
     });
 }

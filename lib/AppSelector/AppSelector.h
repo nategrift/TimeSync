@@ -2,12 +2,13 @@
 #define APP_SELECTOR_H
 
 #include "AppManager.h"
-#include "ListComponent.h"
 #include "IApp.h"
+#include "lvgl.h"
 
 class AppSelector : public IApp {
 private:
-    int listComponentId;
+    AppManager& appManager;
+    lv_obj_t* screenObj;
 
 public:
     AppSelector(AppManager& manager);
@@ -16,8 +17,6 @@ public:
     void launch() override;
     void close() override;
     void backgroundActivity() override;
-
-
 };
 
 #endif // APP_SELECTOR_H

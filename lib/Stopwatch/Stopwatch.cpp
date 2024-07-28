@@ -24,14 +24,14 @@ void Stopwatch::launch() {
     updateDisplay();
     InputManager& inputManager = appManager.getInputManager();
     inputListenerId = inputManager.addListener([this](InputEvent event) {
-        if (event == InputEvent::BUTTON_PRESS) {
-            if (this->isRunning) {
-                this->stop();
-            } else {
-                this->start();
-            }
-            ESP_LOGI("Stopwatch", "Stopwatch %s", this->isRunning ? "started" : "stopped");
-        }
+        // if (event == InputEvent::BUTTON_PRESS) {
+        //     if (this->isRunning) {
+        //         this->stop();
+        //     } else {
+        //         this->start();
+        //     }
+        //     ESP_LOGI("Stopwatch", "Stopwatch %s", this->isRunning ? "started" : "stopped");
+        // }
         return true;
     });
 

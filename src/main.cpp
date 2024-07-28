@@ -23,9 +23,9 @@ extern "C" {
 #include "AppManager.h"
 // START APPS
 
-#include "Alarm.h"
+// #include "Alarm.h"
 #include "Clock.h"
-#include "Stopwatch.h"
+// #include "Stopwatch.h"
 #include "AppSelector.h"
 #include "lvgl.h"
 // END APPS
@@ -51,56 +51,52 @@ extern "C" void app_main() {
     GraphicsDriver graphicsDriver;
     graphicsDriver.init();
 
+    static TouchDriver touchDriver;
+    if (touchDriver.init() == ESP_OK) {
+        graphicsDriver.setupTouchDriver(touchDriver);
+    }
+
     static UIManager uiManager;
     static TimeManager timeManager;
-    static InputManager inputManager(JOYSTICK_CHANNEL, BUTTON_PIN);
+    static InputManager inputManager(touchDriver);
     static FileManager fileManager;
     static BatteryManager batteryManager;
 
-    static AppManager appManager(uiManager, inputManager, timeManager, fileManager, batteryManager);
+    static AppManager appManager(touchDriver, uiManager, inputManager, timeManager, fileManager, batteryManager);
 
     Clock* clockApp = new Clock(appManager);
-    Alarm* alarmApp = new Alarm(appManager);
-    Stopwatch* stopWatchApp = new Stopwatch(appManager);
+    // Alarm* alarmApp = new Alarm(appManager);
+    // Stopwatch* stopWatchApp = new Stopwatch(appManager);
 
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
     appManager.registerApp("Clock", clockApp);
-    appManager.registerApp("Alarm", alarmApp);
-    appManager.registerApp("StopWatch", stopWatchApp);
+    // appManager.registerApp("Alarm", alarmApp);
+    // appManager.registerApp("StopWatch", stopWatchApp);
     appManager.registerApp("AppSelector", appSelector);
 
-    appManager.launchApp("Clock");
+    appManager.launchApp("AppSelector");
 
     // Create tasks for rendering and time management
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
 
     // DISABLED INPUT CURRENLTY, moved to touch screen
-    // xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
+    xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
 
-    inputManager.addListener([&](InputEvent event) {
-        switch (event) {
-            case InputEvent::JOYSTICK_UP:
-                ESP_LOGI("InputManager", "Joystick moved up");
-                break;
-            case InputEvent::JOYSTICK_DOWN:
-                ESP_LOGI("InputManager", "Joystick moved down");
-                break;
-            case InputEvent::BUTTON_PRESS:
-                ESP_LOGI("InputManager", "Button short pressed");
-                // Handle short press
-                break;
-            case InputEvent::BUTTON_LONG_PRESS:
-                ESP_LOGI("InputManager", "Button long pressed");
-                // Handle long press, e.g., launch AppSelector
-                appManager.launchApp("AppSelector");
-                break;
-        }
-        // continue to other listeners
-        return false;
-    });
+    // inputManager.addListener([&](InputEvent event) {
+    //     switch (event) {
+    //         case InputEvent::BUTTON_LONG_PRESS:
+    //             ESP_LOGI("InputManager", "Button long pressed");
+    //             // Handle long press, e.g., launch AppSelector
+    //             appManager.launchApp("AppSelector");
+    //             break;
+    //     }
+    //     // continue to other listeners
+    //     return false;
+    // });
+    
     ESP_LOGI(TAG, "Initializing GPIO");
 
     // Initialize GPIO
@@ -110,14 +106,5 @@ extern "C" void app_main() {
     // Turn on the backlight
     ESP_LOGI(TAG, "Turning on the backlight");
     gpio_set_level(LCD_BL_GPIO, 1);
-
-    TouchDriver touchDriver;
-    if (touchDriver.init() == ESP_OK) {
-        graphicsDriver.setupTouchDriver(touchDriver);
-        while (true) {
-            touchDriver.readTouchData();
-            vTaskDelay(pdMS_TO_TICKS(30));
-        }
-    }
-
 }
+

@@ -8,13 +8,21 @@
 #include "esp_log.h"
 #include "lvgl.h"
 
+
+struct TouchData {
+    uint16_t x;
+    uint16_t y;
+    uint8_t gesture_id;
+    bool touch_detected;
+};
+
 class TouchDriver {
 public:
     TouchDriver();
     ~TouchDriver();
 
     esp_err_t init();
-    void readTouchData();
+    TouchData getTouchCoordinates();
     void lvglRead(lv_indev_drv_t *drv, lv_indev_data_t *data);
 
 private:
@@ -23,9 +31,6 @@ private:
     esp_err_t i2cMasterInit();
     esp_err_t readRegister(uint8_t reg, uint8_t *data, size_t len);
     esp_err_t writeRegister(uint8_t reg, uint8_t *data, size_t len);
-
-    void printTouchCoordinates(const uint8_t *data);
-    bool getTouchCoordinates(uint16_t &x, uint16_t &y);
 };
 
 #endif // TOUCHDRIVER_H

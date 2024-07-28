@@ -9,20 +9,9 @@
 
 #include "InputManager.h"
 
-// It really should be 4096 / 2 however the hardware we have the middle is actually 3090.
-constexpr uint32_t JOYSTICK_MIDDLE_THRESHOLD = 3090;
-const uint32_t JOYSTICK_PRECISION = 500;
+InputManager::InputManager(TouchDriver& touch) 
+    : touchDriver(touch) {}
 
-InputManager::InputManager(adc2_channel_t joystickChannel, gpio_num_t btnPin) 
-    : joystickChannel(joystickChannel), buttonPin(btnPin) {
-    // ADC for joystick read
-    adc2_config_channel_atten(joystickChannel, ADC_ATTEN_DB_12);
-
-    // GPIO for button press
-    gpio_set_direction(buttonPin, GPIO_MODE_INPUT);
-    gpio_pullup_en(buttonPin);
-    gpio_pulldown_dis(buttonPin);
-}
 
 void InputManager::inputTask(void* arg) {
     auto* instance = static_cast<InputManager*>(arg);
@@ -34,35 +23,22 @@ void InputManager::pollInputs() {
     bool isButtonPressed = false;
 
     while (true) {
-        int joystickValue;
-        adc2_get_raw(joystickChannel, ADC_WIDTH_BIT_12, &joystickValue);
-
-        if (joystickValue > JOYSTICK_MIDDLE_THRESHOLD + JOYSTICK_PRECISION) {
-            notifyListeners(InputEvent::JOYSTICK_DOWN);
-            vTaskDelay(pdMS_TO_TICKS(600));
-        } else if (joystickValue < JOYSTICK_MIDDLE_THRESHOLD - JOYSTICK_PRECISION) {
-            notifyListeners(InputEvent::JOYSTICK_UP);
-            vTaskDelay(pdMS_TO_TICKS(600));
-        }
-        
-        int buttonState = gpio_get_level(buttonPin);
-        if (buttonState == 0) {
-            if (!isButtonPressed) {
-                buttonPressStartTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
-                isButtonPressed = true;
-            }
-        } else {
-            if (isButtonPressed) {
-                uint32_t currentTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
-                if (currentTime - buttonPressStartTime > longPressDuration) {
-                    notifyListeners(InputEvent::BUTTON_LONG_PRESS);
-                } else {
-                    notifyListeners(InputEvent::BUTTON_PRESS);
-                }
-                isButtonPressed = false;
-                buttonPressStartTime = 0;
-            }
-        }
+        // TouchData touch = touchDriver.getTouchCoordinates();
+        // if (touch.touch_detected) {
+        //     if (!isButtonPressed) {
+        //         buttonPressStartTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
+        //         isButtonPressed = true;
+        //     }
+        // } else {
+        //     if (isButtonPressed) {
+        //         uint32_t currentTime = xTaskGetTickCount() * (1000 / configTICK_RATE_HZ);
+        //         if (currentTime - buttonPressStartTime > longPressDuration) {
+        //             notifyListeners(InputEvent::BUTTON_LONG_PRESS);
+        //         }
+        //         isButtonPressed = false;
+        //         buttonPressStartTime = 0;
+        //     }
+        // }
 
         vTaskDelay(pdMS_TO_TICKS(40));
     }

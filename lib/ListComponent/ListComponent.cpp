@@ -7,17 +7,17 @@ ListComponent::ListComponent(AppManager& manager)
     inputListenerId = appManager.getInputManager().addListener([this](InputEvent event) {
         ESP_LOGI("ListComponent", "Input");
         switch (event) {
-            case InputEvent::JOYSTICK_UP:
-                navigate(-1);
-                break;
-            case InputEvent::JOYSTICK_DOWN:
-                navigate(1);
-                break;
-            case InputEvent::BUTTON_PRESS:
-                if (onSelect && items.contains(currentIndex)) {
-                    onSelect(currentIndex);
-                }
-                break;
+            // case InputEvent::JOYSTICK_UP:
+            //     navigate(-1);
+            //     break;
+            // case InputEvent::JOYSTICK_DOWN:
+            //     navigate(1);
+            //     break;
+            // case InputEvent::BUTTON_PRESS:
+            //     if (onSelect && items.contains(currentIndex)) {
+            //         onSelect(currentIndex);
+            //     }
+            //     break;
             default:
                 break;
         }

@@ -1,26 +1,22 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
-#include <vector>
-#include <functional>
-#include <ctime>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "AppManager.h"
 #include "IApp.h"
+#include "AppManager.h"
+#include "TimeManager.h"
+#include "BatteryManager.h"
 #include "lvgl.h"
 
 class Clock : public IApp {
 private:
-    TimeManager::ListenerId timeListenerId;
+    int timeListenerId;
     lv_obj_t* clockTimeLabel;
-    lv_obj_t* clockTitleLabel;
+    lv_obj_t* screenObj;
     lv_obj_t* batteryLabel;
     lv_obj_t* batteryIcon;
+    AppManager& appManager;
     BatteryManager& batteryManager;
-
-    void handleTimeUpdate(const struct tm& timeinfo);
-    void updateBatteryLevel();
+    lv_timer_t* batteryUpdateTimer;
 
 public:
     Clock(AppManager& manager);
@@ -29,6 +25,10 @@ public:
     void launch() override;
     void close() override;
     void backgroundActivity() override;
+
+private:
+    void handleTimeUpdate(const struct tm& timeinfo);
+    void updateBatteryLevel();
 };
 
 #endif // CLOCK_H
