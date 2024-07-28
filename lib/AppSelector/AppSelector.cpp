@@ -80,22 +80,6 @@ void AppSelector::launch() {
     lv_obj_set_style_border_width(screenObj, 0, LV_PART_MAIN);
     lv_obj_set_style_pad_all(screenObj, 0, LV_PART_MAIN);
 
-
-
-    // // Create the list
-    // lv_obj_t* list = lv_list_create(screenObj);
-    // lv_obj_set_size(list, LV_HOR_RES, LV_VER_RES);
-    // lv_obj_align(list, LV_ALIGN_CENTER, 0, 0);
-    // lv_obj_set_style_border_width(screenObj, 0, LV_PART_MAIN);
-    // lv_obj_set_style_pad_all(screenObj, 0, LV_PART_MAIN);
-
-    // // Remove default styles
-    // lv_obj_set_style_bg_color(list, lv_color_hex(0x000000), LV_PART_MAIN);
-    // lv_obj_set_style_border_width(list, 0, LV_PART_MAIN);
-    // lv_obj_set_style_pad_all(list, 0, LV_PART_MAIN);
-    // lv_obj_set_style_pad_row(list, 0, LV_PART_MAIN);
-    // lv_obj_set_scroll_snap_x(list, LV_SCROLL_SNAP_CENTER);
-
     // Define a common style for list buttons
     static lv_style_t style_btn;
     lv_style_init(&style_btn);

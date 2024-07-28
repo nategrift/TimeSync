@@ -35,7 +35,7 @@ void Stopwatch::launch() {
     lv_label_set_text(clockTitleLabel, "StopWatch");
     lv_obj_align(clockTitleLabel, LV_ALIGN_TOP_MID, 0, 10); // Align title at the top middle
 
-    // Set the style for the clock title
+    // Set the style for the time label
     static lv_style_t style_title;
     lv_style_init(&style_title);
     lv_style_set_text_color(&style_title, lv_color_hex(0xFF0000)); // Red color
@@ -46,7 +46,7 @@ void Stopwatch::launch() {
     lv_label_set_text(timeLabel, "00:00:00.000");
     lv_obj_align(timeLabel, LV_ALIGN_CENTER, 0, 0); // Align time in the center
 
-    // Set the style for the clock time
+    // Set the style for the time
     static lv_style_t style_time;
     lv_style_init(&style_time);
     lv_style_set_text_color(&style_time, lv_color_hex(0xFFFFFF)); // White color
