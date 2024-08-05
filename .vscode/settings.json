@@ -71,6 +71,7 @@
         "iomanip": "cpp",
         "span": "cpp",
         "variant": "cpp",
-        "touchdriver.h": "c"
+        "touchdriver.h": "c",
+        "list": "cpp"
     }
 }

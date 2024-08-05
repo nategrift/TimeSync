@@ -22,6 +22,7 @@ AppSelector::~AppSelector() {
 
 static void scroll_event_cb(lv_event_t * e)
 {
+    
     lv_obj_t * cont = lv_event_get_target(e);
 
     lv_area_t cont_a;
@@ -29,36 +30,34 @@ static void scroll_event_cb(lv_event_t * e)
     int32_t cont_y_center = cont_a.y1 + lv_area_get_height(&cont_a) / 2;
 
     int32_t r = lv_obj_get_height(cont) * 7 / 10;
-    uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(cont);
-    for(i = 0; i < child_cnt; i++) {
+
+    for(uint32_t i = 0; i < child_cnt; i++) {
         lv_obj_t * child = lv_obj_get_child(cont, i);
         lv_area_t child_a;
         lv_obj_get_coords(child, &child_a);
 
         int32_t child_y_center = child_a.y1 + lv_area_get_height(&child_a) / 2;
+        int32_t diff_y = LV_ABS(child_y_center - cont_y_center);
 
-        int32_t diff_y = child_y_center - cont_y_center;
-        diff_y = LV_ABS(diff_y);
-
-        /*Get the x of diff_y on a circle.*/
         int32_t x;
-        /*If diff_y is out of the circle use the last point of the circle (the radius)*/
-        if(diff_y >= r) {
+        if (diff_y < r) {
+            // Prepare the result structure for the square root calculation
+            lv_sqrt_res_t res;
+            
+            // Calculate the square root
+            lv_sqrt((r * r) - (diff_y * diff_y), &res, 0x8000); // Use appropriate mask
+            
+            // Get the integer part of the square root
+            x = r - res.i;
+        } else {
             x = r;
         }
-        else {
-            /*Use Pythagoras theorem to get x from radius and y*/
-            uint32_t x_sqr = r * r - diff_y * diff_y;
-            lv_sqrt_res_t res;
-            lv_sqrt(x_sqr, &res, 0x8000);   /*Use lvgl's built in sqrt root function*/
-            x = r - res.i;
-        }
 
-        /*Translate the item by the calculated X coordinate*/
+        // Apply transformations
         lv_obj_set_style_translate_x(child, x, 0);
 
-        /*Use some opacity with larger translations*/
+        // Calculate and apply opacity
         lv_opa_t opa = lv_map(x, 0, r, LV_OPA_TRANSP, LV_OPA_COVER);
         lv_obj_set_style_opa(child, LV_OPA_COVER - opa, 0);
     }
@@ -94,7 +93,6 @@ void AppSelector::launch() {
 
     lv_obj_t* btn_clock = lv_list_add_btn(screenObj, LV_SYMBOL_HOME, "Clock");
     lv_obj_add_style(btn_clock, &style_btn, LV_PART_MAIN);
-    lv_obj_align(btn_clock, LV_ALIGN_CENTER, 0, 0);
     lv_obj_t* btn_alarm = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Alarm");
     lv_obj_add_style(btn_alarm, &style_btn, LV_PART_MAIN);
     lv_obj_t* btn_stopwatch = lv_list_add_btn(screenObj, LV_SYMBOL_FILE, "StopWatch");

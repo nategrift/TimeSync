@@ -57,9 +57,9 @@ extern "C" void app_main() {
     }
 
     static UIManager uiManager;
-    static TimeManager timeManager;
-    static InputManager inputManager(touchDriver);
     static FileManager fileManager;
+    static TimeManager timeManager(fileManager);
+    static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
     static AppManager appManager(touchDriver, uiManager, inputManager, timeManager, fileManager, batteryManager);
@@ -82,11 +82,14 @@ extern "C" void app_main() {
     xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
 
-    // DISABLED INPUT CURRENLTY, moved to touch screen
-    // xTaskCreate(&InputManager::inputTask, "Input Task", 4096, &inputManager, 4, NULL);
-
     
     ESP_LOGI(TAG, "Initializing GPIO");
+
+    // std::string exampleData("4:12:56 AM");
+    // fileManager.writeData("TimeManager", "time.txt", exampleData);
+    std::string data = fileManager.readData("TimeManager", "time.txt");
+    ESP_LOGI(TAG, "Content: %s", data.c_str());
+    
 
     // Initialize GPIO
     gpio_set_direction(LCD_BL_GPIO, GPIO_MODE_OUTPUT);
