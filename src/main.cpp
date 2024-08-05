@@ -12,6 +12,7 @@ extern "C" {
 #include "TextComponent.h"
 #include "InputManager.h"
 #include "FileManager.h"
+#include "AwakeManager.h"
 #include "BatteryManager.h"
 
 #include "GraphicsDriver.h"
@@ -56,13 +57,16 @@ extern "C" void app_main() {
         graphicsDriver.setupTouchDriver(touchDriver);
     }
 
+    // setup GPIO for the awake manager
+    AwakeManager::init();
+
     static UIManager uiManager;
     static FileManager fileManager;
     static TimeManager timeManager(fileManager);
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
-    static AppManager appManager(touchDriver, uiManager, inputManager, timeManager, fileManager, batteryManager);
+    static AppManager appManager(touchDriver, uiManager, fileManager, timeManager, inputManager, batteryManager);
 
     Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);
@@ -76,21 +80,12 @@ extern "C" void app_main() {
     appManager.registerApp("StopWatch", stopWatchApp);
     appManager.registerApp("AppSelector", appSelector);
 
-    appManager.launchApp("AppSelector");
+    appManager.launchApp("Clock");
 
-    // Create tasks for rendering and time management
-    xTaskCreate(&UIManager::renderTask, "Rendering Task", 4096, &uiManager, 5, NULL);
+    // Create tasks for time management
     xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
 
-    
     ESP_LOGI(TAG, "Initializing GPIO");
-
-    // std::string exampleData("4:12:56 AM");
-    // fileManager.writeData("TimeManager", "time.txt", exampleData);
-    std::string data = fileManager.readData("TimeManager", "time.txt");
-    ESP_LOGI(TAG, "Content: %s", data.c_str());
-    
-
     // Initialize GPIO
     gpio_set_direction(LCD_BL_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_direction(EXAMPLE_PIN_NUM_LCD_RST, GPIO_MODE_OUTPUT);

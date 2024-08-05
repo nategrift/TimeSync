@@ -82,22 +82,26 @@ void gc9a01_displayInit(void)
 
     ESP_ERROR_CHECK(esp_lcd_new_panel_gc9a01(io_handle, &panel_config, &panel_handle));
 
-
-    ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
-    ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
-
-    ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
-
-    ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
-
-    // user can flush pre-defined pattern to the screen before we turn on the screen or backlight
-    ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+    gc9a01_reload();
 
 
     ESP_LOGI(gc9a01, "Turn on LCD backlight");
     gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 
 
+}
+
+void gc9a01_reload() {
+    if (panel_handle) {
+        ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle));
+        ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
+
+        ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
+
+        ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
+
+        ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
+    }
 }
 
 /*************************************** USEFUL ELECTRONICS*****END OF FILE****/

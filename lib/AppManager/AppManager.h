@@ -22,14 +22,14 @@ private:
     std::string openAppName;
     TouchDriver& touchDriver;
     UIManager& uiManager;
-    InputManager& inputManager;
-    TimeManager& timeManager;
     FileManager& fileManager;
+    TimeManager& timeManager;
+    InputManager& inputManager;
     BatteryManager& batteryManager;
 
 public:
-    AppManager(TouchDriver& touchDriver, UIManager& uiManager, InputManager& inputManager, TimeManager& timeManager, FileManager& fileManager, BatteryManager& batteryManager) : 
-        touchDriver(touchDriver), uiManager(uiManager), inputManager(inputManager), timeManager(timeManager), fileManager(fileManager), batteryManager(batteryManager) {}
+    AppManager(TouchDriver& touchDriver, UIManager& uiManager, FileManager& fileManager, TimeManager& timeManager, InputManager& inputManager, BatteryManager& batteryManager) : 
+        touchDriver(touchDriver), uiManager(uiManager), fileManager(fileManager), timeManager(timeManager), inputManager(inputManager), batteryManager(batteryManager) {}
 
     void registerApp(const std::string& name, IApp* app);
     void launchApp(const std::string& appName);
@@ -42,8 +42,8 @@ public:
 
     UIManager& getUIManager() {return uiManager;}  
     InputManager& getInputManager() {return inputManager;}
-    TimeManager& getTimeManager() {return timeManager;}
     FileManager& getFileManager() {return fileManager;}
+    TimeManager& getTimeManager() {return timeManager;}
     BatteryManager& getBatteryManager() {return batteryManager;}
 
 };

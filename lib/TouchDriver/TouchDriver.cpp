@@ -22,13 +22,6 @@ esp_err_t TouchDriver::init() {
         return ret;
     }
 
-    // Reset the touch chip
-    ret = reset();
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Reset failed");
-        return ret;
-    }
-
     ESP_LOGI(TAG, "Touch driver initialized successfully");
     return ESP_OK;
 }
@@ -49,15 +42,6 @@ esp_err_t TouchDriver::i2cMasterInit() {
     }
 
     return i2c_driver_install(I2C_NUM, conf.mode, 0, 0, 0);
-}
-
-esp_err_t TouchDriver::reset() {
-    gpio_set_direction(RST_GPIO, GPIO_MODE_OUTPUT);
-    gpio_set_level(RST_GPIO, 0);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-    gpio_set_level(RST_GPIO, 1);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-    return ESP_OK;
 }
 
 esp_err_t TouchDriver::readRegister(uint8_t reg, uint8_t *data, size_t len) {

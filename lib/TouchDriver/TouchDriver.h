@@ -27,7 +27,6 @@ public:
 
 private:
     static const uint8_t I2C_ADDR = 0x15; // I2C address of the CST816S
-    esp_err_t reset();
     esp_err_t i2cMasterInit();
     esp_err_t readRegister(uint8_t reg, uint8_t *data, size_t len);
     esp_err_t writeRegister(uint8_t reg, uint8_t *data, size_t len);
