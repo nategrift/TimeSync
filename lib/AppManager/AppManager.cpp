@@ -4,8 +4,8 @@
 #include <algorithm>
 #include "LvglMutex.h"
 
-void AppManager::registerApp(const std::string& name, IApp* app) {
-    appRegistry.push_back({name, app});
+void AppManager::registerApp(IApp* app) {
+    appRegistry.push_back({app->getAppName(), app});
 }
 
 void AppManager::launchApp(const std::string& appName) {

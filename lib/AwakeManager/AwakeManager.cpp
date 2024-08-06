@@ -21,7 +21,7 @@ void AwakeManager::init() {
     gpio_config(&io_conf);
 }
 
-void AwakeManager::sleepDevice(AppManager& appManager) {
+void AwakeManager::sleepDevice() {
     ESP_LOGI(TAG, "Entering light sleep...");
     lv_obj_invalidate(lv_scr_act());
     lv_refr_now(NULL);
@@ -34,10 +34,10 @@ void AwakeManager::sleepDevice(AppManager& appManager) {
 
     ESP_LOGI(TAG, "Waking up from sleep...");
 
-    wakeDevice(appManager);
+    wakeDevice();
 }
 
-void AwakeManager::wakeDevice(AppManager& appManager) {
+void AwakeManager::wakeDevice() {
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();
 }

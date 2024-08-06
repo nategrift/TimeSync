@@ -84,7 +84,6 @@ void gc9a01_displayInit(void)
 
     gc9a01_reload();
 
-
     ESP_LOGI(gc9a01, "Turn on LCD backlight");
     gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 

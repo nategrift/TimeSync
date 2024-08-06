@@ -57,7 +57,7 @@ void gesture_action(AppManager* appManager, lv_dir_t gesture) {
             break;
         case LV_DIR_BOTTOM:
             ESP_LOGI(TAG, "SwipeDown");
-            AwakeManager::sleepDevice(*appManager);
+            AwakeManager::sleepDevice();
             break;
         case LV_DIR_LEFT:
             ESP_LOGI(TAG, "SwipeLeft");

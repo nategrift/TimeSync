@@ -31,7 +31,7 @@ public:
     AppManager(TouchDriver& touchDriver, UIManager& uiManager, FileManager& fileManager, TimeManager& timeManager, InputManager& inputManager, BatteryManager& batteryManager) : 
         touchDriver(touchDriver), uiManager(uiManager), fileManager(fileManager), timeManager(timeManager), inputManager(inputManager), batteryManager(batteryManager) {}
 
-    void registerApp(const std::string& name, IApp* app);
+    void registerApp(IApp* app);
     void launchApp(const std::string& appName);
     void launchAppAtIndex(size_t index);
     void launchNextApp();

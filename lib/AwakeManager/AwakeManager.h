@@ -3,13 +3,12 @@
 
 #include "driver/gpio.h"
 #include "lvgl.h"
-#include "AppManager.h"
 
 class AwakeManager {
 public:
     static void init();
-    static void sleepDevice(AppManager& appManager);
-    static void wakeDevice(AppManager& appManager);
+    static void sleepDevice();
+    static void wakeDevice();
 };
 
 #endif // AWAKE_MANAGER_H

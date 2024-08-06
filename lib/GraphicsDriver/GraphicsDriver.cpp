@@ -4,6 +4,8 @@
 
 #include "TouchDriver.h"
 #include "LvglMutex.h"
+#include "AwakeManager.h"
+#include "ConfigManager.h"
 
 GraphicsDriver::GraphicsDriver() {
     // Constructor
@@ -24,27 +26,32 @@ void GraphicsDriver::init() {
 void GraphicsDriver::lvgl_task(void *arg) {
     ESP_LOGI(TAG, "Starting LVGL task");
 
-    const int target_frame_time_ms = 1000 / 30;
     TickType_t last_wake_time = xTaskGetTickCount();
 
+    const int target_frame_time_ms = 1000 / 30;
     while (1) {
-        TickType_t start_time = xTaskGetTickCount();
+        if(lv_disp_get_inactive_time(NULL) < ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000) {
+            TickType_t start_time = xTaskGetTickCount();
 
-        // Render within a LVGL mutex lock
-        LvglMutex::lock();
-        lv_timer_handler();
-        LvglMutex::unlock();
+            // Render within a LVGL mutex lock
+            LvglMutex::lock();
+            lv_timer_handler();
+            LvglMutex::unlock();
 
-        // How long did the frame take to render, then minus our tar
-        TickType_t frame_time = xTaskGetTickCount() - start_time;
-        int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
+            // How long did the frame take to render, then minus our tar
+            TickType_t frame_time = xTaskGetTickCount() - start_time;
+            int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
 
-        // Ensure a minimum delay of 1 ms to prevent CPU lockup
-        if (delay_time_ms < 2) {
-            delay_time_ms = 2;
+            // Ensure a minimum delay of 1 ms to prevent CPU lockup
+            if (delay_time_ms < 2) {
+                delay_time_ms = 2;
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
+        } else {
+            AwakeManager::sleepDevice();
+            lv_disp_trig_activity(NULL);
         }
-
-        vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
     }
 }
 
