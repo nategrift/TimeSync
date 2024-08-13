@@ -9,7 +9,7 @@
 
 static const char* TAG = "TimeManager";
 
-static const int SERIALIZE_FREQUENCY = 1000;
+static const int SERIALIZE_FREQUENCY = 3000;
 static const int TIME_FREQUENCY = 50;
 
 struct tm TimeManager::timeinfo = {};
@@ -49,8 +49,8 @@ void TimeManager::setRTCTime(time_t t) {
 }
 
 void TimeManager::setDate(int year, int month, int day) {
-    TimeManager::timeinfo.tm_year = year;
-    TimeManager::timeinfo.tm_mon = month;
+    TimeManager::timeinfo.tm_year = year - 1900; // based minus 1900
+    TimeManager::timeinfo.tm_mon = month - 1; // month is base 0
     TimeManager::timeinfo.tm_mday = day;
 
     time_t newTime = mktime(&TimeManager::timeinfo);
@@ -106,8 +106,8 @@ void TimeManager::serializeTime(const struct tm& timeinfo) {
                                  std::to_string(timeinfo.tm_min) + ":" +
                                  std::to_string(timeinfo.tm_sec);
 
-    std::string dateSerializedData = std::to_string(timeinfo.tm_year) + "-" +
-                                 std::to_string(timeinfo.tm_mon) + "-" +
+    std::string dateSerializedData = std::to_string(timeinfo.tm_year + 1900) + "-" +
+                                 std::to_string(timeinfo.tm_mon + 1) + "-" +
                                  std::to_string(timeinfo.tm_mday);
 
     ConfigManager::setConfigString("General", "Time", timeSerializedData);
@@ -131,6 +131,8 @@ bool TimeManager::deserializeTime() {
            &timeinfo.tm_year,
            &timeinfo.tm_mon,
            &timeinfo.tm_mday);
+    timeinfo.tm_year = timeinfo.tm_year - 1900;
+    timeinfo.tm_mon = timeinfo.tm_mon - 1;
 
     time_t restoredTime = mktime(&timeinfo);
     TimeManager::setRTCTime(restoredTime);

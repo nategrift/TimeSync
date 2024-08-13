@@ -6,11 +6,13 @@
 #include "TimeManager.h"
 #include "BatteryManager.h"
 #include "lvgl.h"
+#include "ui_components.h"
 
 class Clock : public IApp {
 private:
     int timeListenerId;
     lv_obj_t* clockTimeLabel;
+    lv_obj_t* clockDateLabel;
     lv_obj_t* screenObj;
     lv_obj_t* batteryLabel;
     lv_obj_t* batteryIcon;

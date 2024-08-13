@@ -64,6 +64,24 @@ WriteCallback createTimeWriteCallback(const std::string& group, const std::strin
     };
 }
 
+ReadCallback createDateReadCallback(const std::string& group, const std::string& key) {
+    return [group, key]() -> std::string {
+        return ConfigManager::getConfigString(group, key);
+    };
+}
+
+WriteCallback createDateWriteCallback(const std::string& group, const std::string& key) {
+    return [group, key](const std::string& value) {
+        int year, month, day;
+        sscanf(value.c_str(), "%d-%d-%d",
+           &year,
+           &month,
+           &day);
+        
+        TimeManager::setDate(year, month, day);
+    };
+}
+
 
 
 static std::vector<Setting> generalSettings = {
@@ -88,7 +106,7 @@ static std::vector<Setting> generalSettings = {
         "90\n"
         "95"},
     {"Clock Time", createTimeReadCallback("General", "Time"), createTimeWriteCallback("General", "Time"), SettingType::TIME, nullptr},
-    // {"Clock Date", [](){ return "2024-08-05"; }, [](const std::string& s) {}, SettingType::DATE}
+    {"Clock Date", createDateReadCallback("General", "Date"), createDateWriteCallback("General", "Date"), SettingType::DATE, nullptr},
 };
 
 void Settings::launch() {

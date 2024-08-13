@@ -8,6 +8,7 @@
 #include <string>
 #include "settings_edit.h"
 #include "esp_log.h"
+#include "ui_components.h"
 
 // Function to create a settings list for a category using a flex container
 lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings, AppManager& appManager) {
@@ -28,17 +29,10 @@ lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings,
 
 
      // Create the back button
-    lv_obj_t* backBtn = lv_btn_create(container);
+    lv_obj_t* backBtn = get_button(container, "Home");
     lv_obj_set_width(backBtn, lv_pct(100)); // Set initial width
     lv_obj_set_style_pad_all(backBtn, 15, LV_PART_MAIN); 
-    lv_obj_set_style_bg_color(backBtn, lv_color_hex(0x083445), LV_PART_MAIN);
     lv_obj_center(backBtn);
-
-    // Create a label for the button
-    lv_obj_t* label = lv_label_create(backBtn);
-    lv_label_set_text(label, "Back to Home");
-    lv_obj_set_style_text_color(label, lv_color_hex(0x7ab7cf), LV_PART_MAIN);
-    lv_obj_set_align(label, LV_ALIGN_CENTER);
 
     // go back to app selector. Back button
     lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {

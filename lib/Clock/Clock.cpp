@@ -49,6 +49,18 @@ void Clock::launch() {
 
     lv_obj_add_style(clockTimeLabel, &style_time, 0);
 
+    clockDateLabel = lv_label_create(screenObj);
+    lv_label_set_text(clockDateLabel, "--- --");
+    lv_obj_align(clockDateLabel, LV_ALIGN_CENTER, 0, 25);
+
+    static lv_style_t style_date;
+    lv_style_init(&style_date);
+    lv_style_set_text_color(&style_date, COLOR_MUTED_TEXT);
+    lv_style_set_text_font(&style_date, &lv_font_montserrat_12);
+
+    lv_obj_add_style(clockDateLabel, &style_date, 0);
+
+
     static lv_style_t style_battery;
     lv_style_init(&style_battery);
     lv_style_set_text_color(&style_battery, lv_color_hex(0xFFFFFF));
@@ -81,33 +93,39 @@ void Clock::close() {
         batteryUpdateTimer = NULL;
     }
 
-    if (clockTimeLabel) {
-        lv_obj_del(clockTimeLabel);
-        clockTimeLabel = NULL;
-    }
-    if (batteryLabel) {
-        lv_obj_del(batteryLabel);
-        batteryLabel = NULL;
-    }
-    if (batteryIcon) {
-        lv_obj_del(batteryIcon);
-        batteryIcon = NULL;
-    }
-    if (screenObj) {
+    if (screenObj && lv_obj_is_valid(screenObj)) {
         lv_obj_del(screenObj);
         screenObj = NULL;
+        batteryIcon = NULL;
+        batteryLabel = NULL;
+        clockDateLabel = NULL;
+        clockTimeLabel = NULL;
     }
 }
 
 void Clock::handleTimeUpdate(const struct tm& timeinfo) {
     LvglMutex::lock();
-    char strftime_buf[64];
-    strftime(strftime_buf, sizeof(strftime_buf), "%I:%M:%S %p", &timeinfo);
 
+    // Format time as "HH:MM:SS AM/PM"
+    char time_buf[64];
+    strftime(time_buf, sizeof(time_buf), "%I:%M:%S %p", &timeinfo);
+
+    // Format date as "Mon dd"
+    char date_buf[16];
+    strftime(date_buf, sizeof(date_buf), "%b %d %Y", &timeinfo);  // %b is abbreviated month name
+
+    // Update the time label
     if (lv_obj_is_valid(clockTimeLabel)) {
-        lv_label_set_text(clockTimeLabel, strftime_buf);
-        lv_obj_align(clockTimeLabel, LV_ALIGN_CENTER, 0, 0); // Re-align to ensure it's centered
+        lv_label_set_text(clockTimeLabel, time_buf);
+        lv_obj_align(clockTimeLabel, LV_ALIGN_CENTER, 0, 0);\
     }
+
+    // Update the date label
+    if (lv_obj_is_valid(clockDateLabel)) {
+        lv_label_set_text(clockDateLabel, date_buf);
+        lv_obj_align(clockDateLabel, LV_ALIGN_CENTER, 0, 25);
+    }
+
     LvglMutex::unlock();
 }
 

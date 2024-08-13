@@ -6,7 +6,7 @@
 
 #define LONG_PRESS_THRESHOLD 600 // Long press threshold in ms
 #define ANIMATION_START_DELAY 100 // Del
-#define MAX_BORDER_WIDTH 10 // Maximum border thickness
+#define MAX_BORDER_WIDTH 15 // Maximum border thickness
 #define ANIMATION_DURATION 500 // Duration of the animation in ms = LONG_PRESS_THRESHOLD - ANIMATION_START_DELAY
 
 extern lv_color_t grey_color;

@@ -2,13 +2,14 @@
 
 #include "esp_log.h"
 #include "AwakeManager.h"
+#include "ui_components.h"
 
 static uint32_t press_time = 0;
 static lv_style_t style; // Style for the circle border
 static lv_anim_t anim; // Animation object
 
-lv_color_t grey_color = lv_color_hex(0x0d0d0d);
-lv_color_t green_color = lv_color_hex(0x2e402c);
+lv_color_t grey_color = lv_color_hex(0x000000);
+lv_color_t border_color = COLOR_PRIMARY_MUTED;
 
 // Variables to track touch position
 static lv_point_t start_pos;
@@ -36,7 +37,7 @@ void border_anim_cb(void * var, int32_t value) {
 
     if (press_duration >= LONG_PRESS_THRESHOLD) {
         // Handle long press action and change color to light green
-        lv_obj_set_style_border_color(obj, green_color, LV_PART_MAIN);
+        lv_obj_set_style_border_color(obj, border_color, LV_PART_MAIN);
     }
 }
 

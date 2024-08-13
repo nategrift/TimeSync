@@ -6,6 +6,7 @@
 #include "LvglMutex.h"
 #include "app_screen.h"
 #include "TimeManager.h"
+#include "ui_components.h"
 
 
 Stopwatch::Stopwatch(AppManager& manager) 
@@ -55,15 +56,12 @@ void Stopwatch::launch() {
     lv_obj_add_style(timeLabel, &style_time, 0);
 
     // button
-    lv_obj_t* toggleButton = lv_btn_create(lv_scr_act());
+    lv_obj_t* toggleButton = get_button(lv_scr_act(), "Start");
     lv_obj_add_event_cb(toggleButton, toggle_event_handler, LV_EVENT_VALUE_CHANGED, this);
     lv_obj_align(toggleButton, LV_ALIGN_CENTER, 0, 70);
     lv_obj_add_flag(toggleButton, LV_OBJ_FLAG_CHECKABLE);
-    lv_obj_set_height(toggleButton, LV_SIZE_CONTENT);
 
-    toggleButtonLabel = lv_label_create(toggleButton);
-    lv_label_set_text(toggleButtonLabel, "Start");
-    lv_obj_center(toggleButtonLabel);
+    toggleButtonLabel = lv_obj_get_child(toggleButton, 0);
 
     // add style
     static lv_style_t button_style;

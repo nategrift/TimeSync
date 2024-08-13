@@ -3,12 +3,16 @@
 #include "lvgl.h"
 #include <algorithm>
 #include "LvglMutex.h"
+#include "esp_log.h"
+
+static const char* TAG = "AppManager";
 
 void AppManager::registerApp(IApp* app) {
     appRegistry.push_back({app->getAppName(), app});
 }
 
 void AppManager::launchApp(const std::string& appName) {
+    ESP_LOGI("AppManager", "Launching %s", appName.c_str());
     IApp* currentApp = getCurrentApp();
     for (auto& appPair : appRegistry) {
         if (appPair.first == appName) {
