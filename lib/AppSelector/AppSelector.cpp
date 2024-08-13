@@ -93,8 +93,8 @@ void AppSelector::launch() {
 
     lv_obj_t* btn_clock = lv_list_add_btn(screenObj, LV_SYMBOL_HOME, "Clock");
     lv_obj_add_style(btn_clock, &style_btn, LV_PART_MAIN);
-    lv_obj_t* btn_alarm = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Alarm");
-    lv_obj_add_style(btn_alarm, &style_btn, LV_PART_MAIN);
+    // lv_obj_t* btn_alarm = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Alarm");
+    // lv_obj_add_style(btn_alarm, &style_btn, LV_PART_MAIN);
     lv_obj_t* btn_stopwatch = lv_list_add_btn(screenObj, LV_SYMBOL_FILE, "StopWatch");
     lv_obj_add_style(btn_stopwatch, &style_btn, LV_PART_MAIN);
     lv_obj_t* btn_settings = lv_list_add_btn(screenObj, LV_SYMBOL_SETTINGS, "Settings");
@@ -123,7 +123,7 @@ void AppSelector::launch() {
     lv_obj_scroll_to_view(lv_obj_get_child(screenObj, 0), LV_ANIM_OFF);
 
     lv_obj_add_event_cb(btn_clock, event_cb, LV_EVENT_CLICKED, this);
-    lv_obj_add_event_cb(btn_alarm, event_cb, LV_EVENT_CLICKED, this);
+    // lv_obj_add_event_cb(btn_alarm, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_stopwatch, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_settings, event_cb, LV_EVENT_CLICKED, this);
 }

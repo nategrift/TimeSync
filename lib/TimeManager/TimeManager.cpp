@@ -15,7 +15,7 @@ TimeManager::TimeManager(FileManager& fileManager) : fileManager(fileManager) {
     if (!deserializeTime()) {
         initializeTime();
     }
-    xTaskCreate(timeTask, "TimeUpdateTask", 4096, this, 5, &timeTaskHandle);
+    xTaskCreatePinnedToCore(timeTask, "TimeUpdateTask", 4096, this, 5, &timeTaskHandle, 0);
 }
 
 void TimeManager::initializeTime() {

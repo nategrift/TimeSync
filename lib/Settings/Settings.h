@@ -13,7 +13,7 @@ enum class SettingType {
     DATE,
     TIME,
     BOOL,
-    STRING
+    STRING,
 };
 
 // Callback types
@@ -26,6 +26,7 @@ struct Setting {
     ReadCallback readCallback;
     WriteCallback writeCallback;
     SettingType type;
+    char* options;
 };
 
 

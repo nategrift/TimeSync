@@ -36,7 +36,26 @@ WriteCallback createIntWriteCallback(const std::string& group, const std::string
 }
 
 std::vector<Setting> generalSettings = {
-    {"Screen Timeout", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT},
+    {"Screen Timeout", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT, 
+        "5\n"
+        "10\n"
+        "15\n"
+        "20\n"
+        "25\n"
+        "30\n"
+        "35\n"
+        "40\n"
+        "45\n"
+        "50\n"
+        "55\n"
+        "60\n"
+        "65\n"
+        "70\n"
+        "75\n"
+        "80\n"
+        "85\n"
+        "90\n"
+        "95"},
     // {"Special", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT},
     // {"", readScreenTimeout, writeScreenTimeout, SettingType::INT},
     // {"Clock Time", readClockTime, writeClockTime, SettingType::TIME},

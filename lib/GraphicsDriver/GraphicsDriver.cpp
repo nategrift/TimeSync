@@ -20,7 +20,7 @@ void GraphicsDriver::init() {
     LvglMutex::init();
 
     // // Create LVGL task
-    xTaskCreate(lvgl_task, "Rendering Task", 14000, NULL, 4, NULL);
+    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 14000, NULL, 5, NULL, 1);
 }
 
 void GraphicsDriver::lvgl_task(void *arg) {
@@ -29,29 +29,31 @@ void GraphicsDriver::lvgl_task(void *arg) {
     TickType_t last_wake_time = xTaskGetTickCount();
 
     const int target_frame_time_ms = 1000 / 30;
+
     while (1) {
-        if(lv_disp_get_inactive_time(NULL) < ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000) {
-            TickType_t start_time = xTaskGetTickCount();
+        TickType_t start_time = xTaskGetTickCount();
 
-            // Render within a LVGL mutex lock
-            LvglMutex::lock();
-            lv_timer_handler();
-            LvglMutex::unlock();
+        // Render within a LVGL mutex lock
+        LvglMutex::lock();
+        lv_timer_handler();
+        LvglMutex::unlock();
 
-            // How long did the frame take to render, then minus our tar
-            TickType_t frame_time = xTaskGetTickCount() - start_time;
-            int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
+        // How long did the frame take to render, then minus our tar
+        TickType_t frame_time = xTaskGetTickCount() - start_time;
+        int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
 
-            // Ensure a minimum delay of 1 ms to prevent CPU lockup
-            if (delay_time_ms < 2) {
-                delay_time_ms = 2;
-            }
-
-            vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
-        } else {
-            AwakeManager::sleepDevice();
-            lv_disp_trig_activity(NULL);
+        // Ensure a minimum delay of 1 ms to prevent CPU lockup
+        if (delay_time_ms < 1) {
+            delay_time_ms = 1;
         }
+
+        vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
+
+        if(lv_disp_get_inactive_time(NULL) > ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000) {
+            ESP_LOGI(TAG, "SLEEPING DUE TO INACTIVITY");
+            AwakeManager::sleepDevice();
+        }
+        
     }
 }
 

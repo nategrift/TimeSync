@@ -87,7 +87,7 @@ extern "C" void app_main() {
     appManager.launchApp(clockApp->getAppName());
 
     // Create tasks for time management
-    xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL);
+    xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, &timeManager, 5, NULL, 0);
 
     ESP_LOGI(TAG, "Initializing GPIO");
     // Initialize GPIO

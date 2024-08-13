@@ -136,14 +136,25 @@ lv_obj_t* get_app_container(AppManager& appManager) {
     lv_obj_align(screenObj, LV_ALIGN_CENTER, 0, 0); // Center the circle on the screen
     lv_obj_set_style_bg_color(screenObj, lv_color_hex(0x000000), LV_PART_MAIN);
     lv_obj_set_style_radius(screenObj, LV_RADIUS_CIRCLE, LV_PART_MAIN); // Set object to be circular
-    lv_obj_add_event_cb(screenObj, press_event_handler, LV_EVENT_ALL, &appManager);
-
     lv_obj_set_style_border_width(screenObj, 0, LV_PART_MAIN); // Start with no border
     lv_obj_set_style_pad_all(screenObj, 0, LV_PART_MAIN);
+    
+    lv_obj_add_event_cb(screenObj, press_event_handler, LV_EVENT_ALL, &appManager);
 
     // Apply the initialized circle style
     init_circle_style();
     lv_obj_add_style(screenObj, &style, 0);
+
+    return screenObj;
+}
+
+lv_obj_t* get_blank_screen() {
+    lv_obj_t* screenObj = lv_obj_create(NULL);
+    lv_obj_set_size(screenObj, LV_HOR_RES, LV_VER_RES);
+    lv_obj_center(screenObj);
+    lv_obj_set_style_bg_color(screenObj, lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_set_style_border_width(screenObj, 0, LV_PART_MAIN); // Start with no border
+    lv_obj_set_style_pad_all(screenObj, 0, LV_PART_MAIN);
 
     return screenObj;
 }

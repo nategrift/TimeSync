@@ -34,6 +34,7 @@ void AwakeManager::sleepDevice() {
 
     ESP_LOGI(TAG, "Waking up from sleep...");
 
+    lv_disp_trig_activity(NULL);
     wakeDevice();
 }
 
