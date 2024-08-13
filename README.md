@@ -16,3 +16,6 @@ To see how the code is designed and the structure behind this TimeSync System, p
 
 - Current hardware I am using is the ESP-32-WROVER
 - I am using PlatformIO to upload the firemare to the device
+
+
+xtensa-esp32-elf-addr2line -pfiaC -e C:\Users\nateg\OneDrive\Documents\GitHub\TimeSync\.pio\build\esp32s3box\firmware.elf 

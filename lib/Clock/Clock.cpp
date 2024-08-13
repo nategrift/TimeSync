@@ -1,6 +1,5 @@
 #include "Clock.h"
 #include "AppManager.h"
-#include "TimeManager.h"
 #include "BatteryManager.h"
 #include "LvglMutex.h"
 
@@ -60,8 +59,7 @@ void Clock::launch() {
     lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 0, -10);
 
     // Set up the time update listener
-    TimeManager& timeManager = appManager.getTimeManager();
-    timeListenerId = timeManager.addTimeUpdateListener([this](const struct tm& timeinfo) {
+    timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
         this->handleTimeUpdate(timeinfo);
     });
 
@@ -75,8 +73,7 @@ void Clock::launch() {
 
 void Clock::close() {
     if (timeListenerId != -1) {
-        TimeManager& timeManager = appManager.getTimeManager();
-        timeManager.removeTimeUpdateListener(timeListenerId);
+        TimeManager::removeTimeUpdateListener(timeListenerId);
         timeListenerId = -1;
     }
     if (batteryUpdateTimer) {

@@ -7,7 +7,10 @@ static const char *TAG = "ConfigManager";
 // Static member initialization
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::configMap;
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::defaultConfigMap = {
-    {"General", {{"ScreenTimeout", "30"}}}
+    {"General", {{"ScreenTimeout", "30"}}},
+    {"General", {{"Time", "02:15:30"}}},
+    {"General", {{"Date", "2024-08-01"}}},
+
 };
 std::string ConfigManager::configFileName;
 FileManager* ConfigManager::fileManager = nullptr;
@@ -53,6 +56,7 @@ bool ConfigManager::hasConfigValue(const std::string& group, const std::string& 
 // Set a configuration value as a string
 bool ConfigManager::setConfigString(const std::string& group, const std::string& key, const std::string& value) {
     configMap[group][key] = value;
+    // TODO: only when we need to.
     serializeConfig();
     return true;
 }
@@ -60,6 +64,7 @@ bool ConfigManager::setConfigString(const std::string& group, const std::string&
 // Set a configuration value as an integer
 bool ConfigManager::setConfigInt(const std::string& group, const std::string& key, int value) {
     configMap[group][key] = std::to_string(value);
+    // TODO: only when we need to.
     serializeConfig();
     return true;
 }

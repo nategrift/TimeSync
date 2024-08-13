@@ -5,61 +5,83 @@
 #include <sys/time.h>
 #include "esp_log.h"
 #include <string>
+#include "ConfigManager.h"
 
 static const char* TAG = "TimeManager";
 
 static const int SERIALIZE_FREQUENCY = 1000;
 static const int TIME_FREQUENCY = 50;
 
-TimeManager::TimeManager(FileManager& fileManager) : fileManager(fileManager) {
-    if (!deserializeTime()) {
-        initializeTime();
+struct tm TimeManager::timeinfo = {};
+std::map<ListenerId, TimeUpdateListener> TimeManager::listeners = {};
+ListenerId TimeManager::nextListenerId = 0;
+TaskHandle_t timeTaskHandle = nullptr;
+
+
+void TimeManager::init() {
+    TimeManager::nextListenerId = 0;
+    if (!TimeManager::deserializeTime()) {
+        TimeManager::initializeTime();
     }
-    xTaskCreatePinnedToCore(timeTask, "TimeUpdateTask", 4096, this, 5, &timeTaskHandle, 0);
 }
 
 void TimeManager::initializeTime() {
     time_t now;
     time(&now);
-    setTime(now);
+    TimeManager::setRTCTime(now);
 }
 
 void TimeManager::updateTime() {
     time_t now;
     time(&now);
-    localtime_r(&now, &timeinfo);
+    localtime_r(&now, &TimeManager::timeinfo);
 
-    for (auto& [id, listener] : listeners) {
-        listener(timeinfo);
+    for (auto& [id, listener] : TimeManager::listeners) {
+        listener(TimeManager::timeinfo);
     }
 }
 
-void TimeManager::setTime(time_t t) {
+void TimeManager::setRTCTime(time_t t) {
     timeval now = {.tv_sec = t, .tv_usec = 0};
     settimeofday(&now, NULL);
 
-    updateTime();
+    TimeManager::updateTime();
 }
 
 void TimeManager::setDate(int year, int month, int day) {
-    timeinfo.tm_year = year;
-    timeinfo.tm_mon = month;
-    timeinfo.tm_mday = day;
+    TimeManager::timeinfo.tm_year = year;
+    TimeManager::timeinfo.tm_mon = month;
+    TimeManager::timeinfo.tm_mday = day;
 
-    time_t newTime = mktime(&timeinfo);
-    setTime(newTime);
+    time_t newTime = mktime(&TimeManager::timeinfo);
+    TimeManager::setRTCTime(newTime);
+    TimeManager::serializeTime(TimeManager::timeinfo);
 }
 
-void TimeManager::timeTask(void *param) {
-    auto *instance = static_cast<TimeManager *>(param);
-    
+void TimeManager::setTime(int hour, int minute, int second) {
+    TimeManager::timeinfo.tm_hour = hour;
+    TimeManager::timeinfo.tm_min = minute;
+    TimeManager::timeinfo.tm_sec = second;
+
+    time_t newTime = mktime(&TimeManager::timeinfo);
+    TimeManager::setRTCTime(newTime);
+    TimeManager::serializeTime(TimeManager::timeinfo);
+}
+
+void TimeManager::getTime(int &hour, int &minute, int &second) {
+    hour = TimeManager::timeinfo.tm_hour;
+    minute = TimeManager::timeinfo.tm_min;
+    second = TimeManager::timeinfo.tm_sec;
+}
+
+void TimeManager::timeTask(void* params) {
     int serializeCount = SERIALIZE_FREQUENCY / TIME_FREQUENCY;
     while (1) {
-        instance->updateTime();
+        TimeManager::updateTime();
 
         // if we should serialize, do so
         if (serializeCount <= 0) {
-            instance->serializeTime(instance->timeinfo);
+            TimeManager::serializeTime(TimeManager::timeinfo);
             serializeCount = SERIALIZE_FREQUENCY / TIME_FREQUENCY;
         }
         serializeCount--;
@@ -68,43 +90,50 @@ void TimeManager::timeTask(void *param) {
     }
 }
 
-TimeManager::ListenerId TimeManager::addTimeUpdateListener(const TimeUpdateListener& listener) {
-    ListenerId id = nextListenerId++;
-    listeners[id] = listener;
+ListenerId TimeManager::addTimeUpdateListener(const TimeUpdateListener& listener) {
+    ListenerId id = TimeManager::nextListenerId++;
+    TimeManager::listeners[id] = listener;
     return id;
 }
 
 void TimeManager::removeTimeUpdateListener(ListenerId id) {
-    listeners.erase(id);
+    TimeManager::listeners.erase(id);
 }
 
 void TimeManager::serializeTime(const struct tm& timeinfo) {
-    std::string serializedData = std::to_string(timeinfo.tm_year) + " " +
-                                 std::to_string(timeinfo.tm_mon) + " " +
-                                 std::to_string(timeinfo.tm_mday) + " " +
-                                 std::to_string(timeinfo.tm_hour) + " " +
-                                 std::to_string(timeinfo.tm_min) + " " +
+
+    std::string timeSerializedData = std::to_string(timeinfo.tm_hour) + ":" +
+                                 std::to_string(timeinfo.tm_min) + ":" +
                                  std::to_string(timeinfo.tm_sec);
-    fileManager.writeData("TimeManager", "time.txt", serializedData);
+
+    std::string dateSerializedData = std::to_string(timeinfo.tm_year) + "-" +
+                                 std::to_string(timeinfo.tm_mon) + "-" +
+                                 std::to_string(timeinfo.tm_mday);
+
+    ConfigManager::setConfigString("General", "Time", timeSerializedData);
+    ConfigManager::setConfigString("General", "Date", dateSerializedData);
 }
 
 bool TimeManager::deserializeTime() {
-    std::string data = fileManager.readData("TimeManager", "time.txt");
-    if (data.empty()) {
+    std::string time = ConfigManager::getConfigString("General", "Time");
+    std::string date = ConfigManager::getConfigString("General", "Date");
+    if (time.empty() || date.empty()) {
         ESP_LOGI(TAG, "No saved time data found, using current time.");
         return false;
     }
 
-    sscanf(data.c_str(), "%d %d %d %d %d %d",
-           &timeinfo.tm_year,
-           &timeinfo.tm_mon,
-           &timeinfo.tm_mday,
+    sscanf(time.c_str(), "%d:%d:%d",
            &timeinfo.tm_hour,
            &timeinfo.tm_min,
            &timeinfo.tm_sec);
 
+     sscanf(date.c_str(), "%d-%d-%d",
+           &timeinfo.tm_year,
+           &timeinfo.tm_mon,
+           &timeinfo.tm_mday);
+
     time_t restoredTime = mktime(&timeinfo);
-    setTime(restoredTime);
+    TimeManager::setRTCTime(restoredTime);
 
     return true;
 }

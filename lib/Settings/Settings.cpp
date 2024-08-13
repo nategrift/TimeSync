@@ -6,6 +6,7 @@
 #include <string>
 #include "settings_list.h"
 #include "ConfigManager.h"
+#include "TimeManager.h"
 
 
 static const char* TAG = "Settings";
@@ -19,7 +20,6 @@ Settings::~Settings() {
 
 }
 
-// Helper function to create a ReadCallback for integers
 ReadCallback createIntReadCallback(const std::string& group, const std::string& key) {
     return [group, key]() -> std::string {
         int value = ConfigManager::getConfigInt(group, key);
@@ -27,7 +27,6 @@ ReadCallback createIntReadCallback(const std::string& group, const std::string& 
     };
 }
 
-// Helper function to create a WriteCallback for integers
 WriteCallback createIntWriteCallback(const std::string& group, const std::string& key) {
     return [group, key](const std::string& value) {
         int intValue = std::stoi(value);
@@ -35,7 +34,39 @@ WriteCallback createIntWriteCallback(const std::string& group, const std::string
     };
 }
 
-std::vector<Setting> generalSettings = {
+ReadCallback createStrReadCallback(const std::string& group, const std::string& key) {
+    return [group, key]() -> std::string {
+        return ConfigManager::getConfigString(group, key);
+    };
+}
+
+WriteCallback createStrWriteCallback(const std::string& group, const std::string& key) {
+    return [group, key](const std::string& value) {
+        ConfigManager::setConfigString(group, key, value);
+    };
+}
+
+ReadCallback createTimeReadCallback(const std::string& group, const std::string& key) {
+    return [group, key]() -> std::string {
+        return ConfigManager::getConfigString(group, key);
+    };
+}
+
+WriteCallback createTimeWriteCallback(const std::string& group, const std::string& key) {
+    return [group, key](const std::string& value) {
+        int hour, minute, second;
+        sscanf(value.c_str(), "%d:%d:%d",
+           &hour,
+           &minute,
+           &second);
+        
+        TimeManager::setTime(hour, minute, second);
+    };
+}
+
+
+
+static std::vector<Setting> generalSettings = {
     {"Screen Timeout", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT, 
         "5\n"
         "10\n"
@@ -56,9 +87,7 @@ std::vector<Setting> generalSettings = {
         "85\n"
         "90\n"
         "95"},
-    // {"Special", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT},
-    // {"", readScreenTimeout, writeScreenTimeout, SettingType::INT},
-    // {"Clock Time", readClockTime, writeClockTime, SettingType::TIME},
+    {"Clock Time", createTimeReadCallback("General", "Time"), createTimeWriteCallback("General", "Time"), SettingType::TIME, nullptr},
     // {"Clock Date", [](){ return "2024-08-05"; }, [](const std::string& s) {}, SettingType::DATE}
 };
 

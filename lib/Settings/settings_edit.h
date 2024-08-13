@@ -10,6 +10,16 @@
 lv_obj_t* edit_screen = nullptr;
 lv_obj_t* previous_screen  = nullptr;
 
+std::string create_roller_options(int start, int end) {
+    std::string options;
+    for (int i = start; i <= end; ++i) {
+        options += std::to_string(i);
+        if (i < end) options += "\n";
+    }
+    return options;
+}
+
+
 lv_obj_t* get_settings_edit_screen(Setting* setting) {
     lv_obj_t * screen = get_blank_screen();
 
@@ -60,6 +70,73 @@ lv_obj_t* create_int_edit_screen(Setting* setting) {
     return screen;
 }
 
+
+lv_obj_t* create_time_edit_screen(Setting* setting) {
+    lv_obj_t* screen = get_settings_edit_screen(setting);
+
+    lv_obj_t *hourRoller = get_default_roller(screen);
+    lv_obj_t *minuteRoller = get_default_roller(screen);
+    lv_obj_t *secondRoller = get_default_roller(screen);
+    lv_obj_align(hourRoller, LV_ALIGN_CENTER, -60, 0);
+    lv_obj_align(minuteRoller, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(secondRoller, LV_ALIGN_CENTER, 60, 0);
+
+    // Options for the rollers
+    std::string hourOptions = create_roller_options(0, 23);
+    std::string minuteOptions = create_roller_options(0, 59);
+    std::string secondOptions = create_roller_options(0, 59);
+
+    // Get the latest time values
+    // int hour = 0;
+    // int minute = 0;
+    // int second = 0;
+    int hour, minute, second = 0;
+    sscanf(setting->readCallback().c_str(), "%d:%d:%d", &hour, &minute, &second);
+
+    lv_roller_set_options(hourRoller, hourOptions.c_str(), LV_ROLLER_MODE_NORMAL);
+    lv_roller_set_options(minuteRoller, minuteOptions.c_str(), LV_ROLLER_MODE_NORMAL);
+    lv_roller_set_options(secondRoller, secondOptions.c_str(), LV_ROLLER_MODE_NORMAL);
+
+    lv_roller_set_selected(hourRoller, hour, LV_ANIM_OFF);
+    lv_roller_set_selected(minuteRoller, minute, LV_ANIM_OFF);
+    lv_roller_set_selected(secondRoller, second, LV_ANIM_OFF);
+
+    // Event callback for each roller to save selected time
+    auto event_cb = [](lv_event_t* e) {
+        lv_obj_t* currentObj = lv_event_get_target(e);
+
+        lv_obj_t* hourRoller = lv_obj_get_child(lv_obj_get_parent(currentObj), -3);
+        lv_obj_t* minuteRoller = lv_obj_get_child(lv_obj_get_parent(currentObj), -2);
+        lv_obj_t* secondRoller = lv_obj_get_child(lv_obj_get_parent(currentObj), -1);
+        Setting* setting = (Setting*)(lv_event_get_user_data(e));
+        if (hourRoller == nullptr) {
+            ESP_LOGI("TIME_EDIT_SCREEN", "Hour roller is null");
+            return;
+        }
+        if (minuteRoller == nullptr) {
+            ESP_LOGI("TIME_EDIT_SCREEN", "Minute roller is null");
+            return;
+        }
+        if (secondRoller == nullptr) {
+            ESP_LOGI("TIME_EDIT_SCREEN", "Second roller is null");
+            return;
+        }
+
+        char hourStr[3], minuteStr[3], secondStr[3];
+        lv_roller_get_selected_str(hourRoller, hourStr, sizeof(hourStr));
+        lv_roller_get_selected_str(minuteRoller, minuteStr, sizeof(minuteStr));
+        lv_roller_get_selected_str(secondRoller, secondStr, sizeof(secondStr));
+
+        std::string formattedTime = std::string(hourStr) + ":" + std::string(minuteStr) + ":" + std::string(secondStr);
+        setting->writeCallback(formattedTime);
+    };
+
+    lv_obj_add_event_cb(hourRoller, event_cb, LV_EVENT_VALUE_CHANGED, setting);
+    lv_obj_add_event_cb(minuteRoller, event_cb, LV_EVENT_VALUE_CHANGED, setting);
+    lv_obj_add_event_cb(secondRoller, event_cb, LV_EVENT_VALUE_CHANGED, setting);
+
+    return screen;
+}
 // Function to open an edit screen
 void open_edit_screen(Setting* setting) {
     previous_screen = lv_scr_act();
@@ -75,7 +152,7 @@ void open_edit_screen(Setting* setting) {
             // create_date_edit_screen(screen, setting);
             break;
         case SettingType::TIME:
-            // create_time_edit_screen(screen, setting);
+            edit_screen = create_time_edit_screen(setting);
             break;
         case SettingType::BOOL:
             // create_bool_edit_screen(screen, setting);

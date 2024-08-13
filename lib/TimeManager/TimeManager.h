@@ -9,30 +9,31 @@
 #include <string>
 #include "FileManager.h"
 
+using TimeUpdateListener = std::function<void(const struct tm&)>;
+using ListenerId = int;
+
 class TimeManager {
-public:
-    using TimeUpdateListener = std::function<void(const struct tm&)>;
-    using ListenerId = int;
 
 private:
-    std::map<ListenerId, TimeUpdateListener> listeners;
-    ListenerId nextListenerId = 0;
-    TaskHandle_t timeTaskHandle = nullptr;
-    FileManager& fileManager;
-    struct tm timeinfo;
+    static std::map<ListenerId, TimeUpdateListener> listeners;
+    static ListenerId nextListenerId;
+    static TaskHandle_t timeTaskHandle;
+    static struct tm timeinfo;
 
-    void serializeTime(const struct tm& timeinfo);
-    bool deserializeTime();
+    static void serializeTime(const struct tm& timeinfo);
+    static bool deserializeTime();
 
 public:
-    TimeManager(FileManager& fileManager);
-    void initializeTime();
-    void updateTime();
-    void setTime(time_t t);
-    void setDate(int year, int month, int day);
-    static void timeTask(void *param);
-    ListenerId addTimeUpdateListener(const TimeUpdateListener& listener);
-    void removeTimeUpdateListener(ListenerId id);
+    static void init();
+    static void initializeTime();
+    static void updateTime();
+    static void setRTCTime(time_t t);
+    static void setTime(int hour, int minute, int second);
+    static void getTime(int &hour, int &minute, int &second);
+    static void setDate(int year, int month, int day);
+    static void timeTask(void* params);
+    static ListenerId addTimeUpdateListener(const TimeUpdateListener& listener);
+    static void removeTimeUpdateListener(ListenerId id);
 };
 
 #endif // TIMEMANAGER_H

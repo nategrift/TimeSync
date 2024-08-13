@@ -5,6 +5,7 @@
 #include <memory>
 #include "LvglMutex.h"
 #include "app_screen.h"
+#include "TimeManager.h"
 
 
 Stopwatch::Stopwatch(AppManager& manager) 
@@ -72,8 +73,7 @@ void Stopwatch::launch() {
 
     updateDisplay();
 
-    TimeManager& timeManager = appManager.getTimeManager();
-    timeListenerId = timeManager.addTimeUpdateListener([this](const struct tm& timeinfo) {
+    timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
         if (this->isRunning) {
             this->elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - this->startTime).count();
             LvglMutex::lock();
@@ -86,8 +86,7 @@ void Stopwatch::launch() {
 void Stopwatch::close() {
     // clean up
     if (timeListenerId != -1) {
-        TimeManager& timeManager = appManager.getTimeManager();
-        timeManager.removeTimeUpdateListener(timeListenerId);
+        TimeManager::removeTimeUpdateListener(timeListenerId);
         timeListenerId = -1;
     }
 

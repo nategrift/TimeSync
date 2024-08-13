@@ -8,7 +8,6 @@
 #include "IApp.h"
 #include "InputManager.h"
 #include "UIManager.h"
-#include "TimeManager.h"
 #include "FileManager.h"
 #include "BatteryManager.h"
 #include "utility"
@@ -23,13 +22,12 @@ private:
     TouchDriver& touchDriver;
     UIManager& uiManager;
     FileManager& fileManager;
-    TimeManager& timeManager;
     InputManager& inputManager;
     BatteryManager& batteryManager;
 
 public:
-    AppManager(TouchDriver& touchDriver, UIManager& uiManager, FileManager& fileManager, TimeManager& timeManager, InputManager& inputManager, BatteryManager& batteryManager) : 
-        touchDriver(touchDriver), uiManager(uiManager), fileManager(fileManager), timeManager(timeManager), inputManager(inputManager), batteryManager(batteryManager) {}
+    AppManager(TouchDriver& touchDriver, UIManager& uiManager, FileManager& fileManager, InputManager& inputManager, BatteryManager& batteryManager) : 
+        touchDriver(touchDriver), uiManager(uiManager), fileManager(fileManager), inputManager(inputManager), batteryManager(batteryManager) {}
 
     void registerApp(IApp* app);
     void launchApp(const std::string& appName);
@@ -43,7 +41,6 @@ public:
     UIManager& getUIManager() {return uiManager;}  
     InputManager& getInputManager() {return inputManager;}
     FileManager& getFileManager() {return fileManager;}
-    TimeManager& getTimeManager() {return timeManager;}
     BatteryManager& getBatteryManager() {return batteryManager;}
 
 };
