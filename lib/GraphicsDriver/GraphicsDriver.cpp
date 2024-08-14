@@ -27,10 +27,14 @@ void GraphicsDriver::lvgl_task(void *arg) {
     ESP_LOGI(TAG, "Starting LVGL task");
 
     TickType_t last_wake_time = xTaskGetTickCount();
-
     const int target_frame_time_ms = 1000 / 30;
 
+    // Debounce variables
+    bool is_debouncing = false;
+    TickType_t debounce_end_time = 0;
+
     while (1) {
+        int screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
         TickType_t start_time = xTaskGetTickCount();
 
         // Render within a LVGL mutex lock
@@ -49,11 +53,24 @@ void GraphicsDriver::lvgl_task(void *arg) {
 
         vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
 
-        if(lv_disp_get_inactive_time(NULL) > ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000) {
+        // Handle debounce after waking up from sleep
+        if (is_debouncing) {
+            if (xTaskGetTickCount() >= debounce_end_time) {
+                is_debouncing = false; // End of debounce period
+            } else {
+                continue; // Skip the rest of the loop during debounce
+            }
+        }
+
+        // Check inactivity time and put the device to sleep if needed
+        if (lv_disp_get_inactive_time(NULL) > screen_timeout_ms) {
             ESP_LOGI(TAG, "SLEEPING DUE TO INACTIVITY");
             AwakeManager::sleepDevice();
+
+            // Set up debounce after waking up
+            is_debouncing = true;
+            debounce_end_time = xTaskGetTickCount() + pdMS_TO_TICKS(screen_timeout_ms);
         }
-        
     }
 }
 

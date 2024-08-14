@@ -12,6 +12,7 @@ public:
     void init();
     float getBatteryVoltage();
     uint8_t getBatteryLevel();
+    bool getBatteryCharging();
 
 private:
     static const adc1_channel_t ADC_CHANNEL = ADC1_CHANNEL_0;

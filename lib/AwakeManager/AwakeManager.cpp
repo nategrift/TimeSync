@@ -35,6 +35,11 @@ void AwakeManager::sleepDevice() {
     ESP_LOGI(TAG, "Waking up from sleep...");
 
     lv_disp_trig_activity(NULL);
+    // Manually reset the inactivity timer by setting the last activity time to the current time
+    lv_disp_t *disp = lv_disp_get_default();
+    if (disp != NULL) {
+        disp->last_activity_time = lv_tick_get();
+    }
     wakeDevice();
 }
 

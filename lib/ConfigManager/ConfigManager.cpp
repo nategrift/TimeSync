@@ -104,23 +104,60 @@ bool ConfigManager::deserializeConfig() {
     std::string line;
     std::string currentGroup;
     bool success = false;
+    bool groupHeaderFound = false;
 
     while (std::getline(dataStream, line)) {
+        line = line.erase(0, line.find_first_not_of(" \t")); // Trim leading whitespace
+
         if (line.empty() || line[0] == '#') {
             continue; // skip empty lines and comments
         }
 
         if (line[0] == '[' && line.back() == ']') {
             currentGroup = line.substr(1, line.size() - 2);
+
+            // Check for valid group name
+            if (currentGroup.empty() || currentGroup.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-") != std::string::npos) {
+                ESP_LOGE(TAG, "Invalid group name in configuration file: %s", line.c_str());
+                return false;
+            }
+
+            groupHeaderFound = true;
         } else {
             size_t equalsPos = line.find('=');
             if (equalsPos != std::string::npos) {
+                if (!groupHeaderFound) {
+                    ESP_LOGE(TAG, "Key-value pair found before any group header: %s", line.c_str());
+                    return false;
+                }
+
                 std::string key = line.substr(0, equalsPos);
                 std::string value = line.substr(equalsPos + 1);
+
+                // Validate key
+                if (key.empty() || key.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-") != std::string::npos) {
+                    ESP_LOGE(TAG, "Invalid key in configuration file: %s", line.c_str());
+                    return false;
+                }
+
+                // Optionally validate value (e.g., no control characters)
+                if (value.find_first_of("\n\r") != std::string::npos) {
+                    ESP_LOGE(TAG, "Invalid value in configuration file: %s", line.c_str());
+                    return false;
+                }
+
                 configMap[currentGroup][key] = value;
                 success = true; // At least one key-value pair is successfully parsed
+            } else {
+                ESP_LOGE(TAG, "Invalid key-value pair in configuration file: %s", line.c_str());
+                return false;
             }
         }
+    }
+
+    if (!groupHeaderFound) {
+        ESP_LOGE(TAG, "No valid group header found in configuration file: %s", configFileName.c_str());
+        return false;
     }
 
     if (success) {

@@ -65,6 +65,7 @@ extern "C" void app_main() {
     static UIManager uiManager;
     static FileManager fileManager;
     // Initialize the ConfigManager with the path to the configuration file
+    // fileManager.writeData("ConfigManager", "config.txt", "");
     ConfigManager::init(fileManager, "config.txt");
     TimeManager::init();
     static InputManager inputManager(touchDriver);

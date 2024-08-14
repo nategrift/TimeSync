@@ -68,7 +68,11 @@ void Clock::launch() {
     batteryLabel = lv_label_create(screenObj);
     lv_label_set_text(batteryLabel, "--%"); // Initial battery percentage
     lv_obj_add_style(batteryLabel, &style_battery, 0);
-    lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
+
+    batteryIcon =  lv_label_create(screenObj);
+    lv_obj_add_style(batteryIcon, &style_battery, 0);
+    lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -20, -10);
 
     // Set up the time update listener
     timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
@@ -80,7 +84,7 @@ void Clock::launch() {
     batteryUpdateTimer = lv_timer_create([](lv_timer_t* timer) {
         Clock* clock = static_cast<Clock*>(timer->user_data);
         clock->updateBatteryLevel();
-    }, 15000, this);
+    }, 4000, this);
 }
 
 void Clock::close() {
@@ -131,12 +135,13 @@ void Clock::handleTimeUpdate(const struct tm& timeinfo) {
 
 void Clock::updateBatteryLevel() {
     uint8_t battery_level = batteryManager.getBatteryLevel();
+    bool battery_charging = batteryManager.getBatteryCharging();
     char battery_text[10];
     snprintf(battery_text, sizeof(battery_text), "%d%%", battery_level);
 
     if (batteryLabel) {
         lv_label_set_text(batteryLabel, battery_text);
-        lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 0, -10); // Re-align to ensure it's positioned correctly
+        lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
     }
 
     if (batteryIcon) {
@@ -150,8 +155,12 @@ void Clock::updateBatteryLevel() {
         } else if (battery_level > 20) {
             icon = LV_SYMBOL_BATTERY_1;
         }
+
+        if (battery_charging) {
+            icon = LV_SYMBOL_USB;
+        }
         lv_label_set_text(batteryIcon, icon);
-        lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_LEFT, 10, -10); // Re-align to ensure it's positioned correctly
+        lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -20, -10);
     }
 }
 

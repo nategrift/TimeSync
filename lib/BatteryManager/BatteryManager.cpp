@@ -55,8 +55,17 @@ uint8_t BatteryManager::getBatteryLevel() {
     } else if (battery_voltage <= 3.0) {
         battery_level = 0;
     } else {
-        battery_level = (battery_voltage - 3.0) * 100 / (4.2 - 3.0);
+        battery_level = (int)((battery_voltage - 3.0) * 100.0 / (4.0 - 3.0));
     }
 
     return battery_level;
+}
+
+bool BatteryManager::getBatteryCharging() {
+    float battery_voltage = getBatteryVoltage();
+    if (battery_voltage >= 4.5) {
+        return true;
+    }
+
+    return false;
 }
