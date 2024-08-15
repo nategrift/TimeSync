@@ -8,7 +8,7 @@ class AwakeManager {
 public:
     static void init();
     static void sleepDevice();
-    static void wakeDevice();
+    static void wakeDevice(int before_sleep_time);
 };
 
 #endif // AWAKE_MANAGER_H
