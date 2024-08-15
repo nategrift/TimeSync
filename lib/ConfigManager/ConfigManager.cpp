@@ -7,9 +7,7 @@ static const char *TAG = "ConfigManager";
 // Static member initialization
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::configMap;
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::defaultConfigMap = {
-    {"General", {{"ScreenTimeout", "30"}}},
-    {"General", {{"Time", "02:15:30"}}},
-    {"General", {{"Date", "2024-08-01"}}},
+    {"General", {{"ScreenTimeout", "30"}, {"Time", "02:15:30"}, {"Date", "2024-08-01"}, {"Brightness", "10"}}},
 
 };
 std::string ConfigManager::configFileName;

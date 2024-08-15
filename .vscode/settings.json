@@ -72,6 +72,7 @@
         "span": "cpp",
         "variant": "cpp",
         "touchdriver.h": "c",
-        "list": "cpp"
+        "list": "cpp",
+        "esp_lcd_gc9a01.h": "c"
     }
 }

@@ -90,11 +90,11 @@ extern "C" void app_main() {
 
     ESP_LOGI(TAG, "Initializing GPIO");
     // Initialize GPIO
-    gpio_set_direction(LCD_BL_GPIO, GPIO_MODE_OUTPUT);
     gpio_set_direction(EXAMPLE_PIN_NUM_LCD_RST, GPIO_MODE_OUTPUT);
 
-    // Turn on the backlight
-    ESP_LOGI(TAG, "Turning on the backlight");
-    gpio_set_level(LCD_BL_GPIO, 1);
+    GraphicsDriver::init_backlight_pwm();
+
+    int brightness = ConfigManager::getConfigInt("General", "Brightness");
+    GraphicsDriver::set_backlight_brightness(brightness);
 }
 

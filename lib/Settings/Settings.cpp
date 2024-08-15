@@ -6,6 +6,7 @@
 #include <string>
 #include "settings_list.h"
 #include "ConfigManager.h"
+#include "GraphicsDriver.h"
 #include "TimeManager.h"
 
 
@@ -86,27 +87,19 @@ WriteCallback createDateWriteCallback(const std::string& group, const std::strin
 
 static std::vector<Setting> generalSettings = {
     {"Screen Timeout", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT, 
-        "5\n"
-        "10\n"
-        "15\n"
-        "20\n"
-        "25\n"
-        "30\n"
-        "35\n"
-        "40\n"
-        "45\n"
-        "50\n"
-        "55\n"
-        "60\n"
-        "65\n"
-        "70\n"
-        "75\n"
-        "80\n"
-        "85\n"
-        "90\n"
-        "95"},
+        "5\n10\n15\n20\n25\n30\n35\n40\n45\n50\n55\n60\n65\n70\n75\n80\n85\n90\n95"},
     {"Clock Time", createTimeReadCallback("General", "Time"), createTimeWriteCallback("General", "Time"), SettingType::TIME, nullptr},
     {"Clock Date", createDateReadCallback("General", "Date"), createDateWriteCallback("General", "Date"), SettingType::DATE, nullptr},
+    {"Brightness", 
+    []() -> std::string {
+        return std::to_string(ConfigManager::getConfigInt("General", "Brightness"));
+    }, 
+    [](const std::string& value) {
+        int brightness = std::stoi(value);
+        GraphicsDriver::set_backlight_brightness(brightness);
+        ConfigManager::setConfigInt("General", "Brightness", brightness);
+    }, 
+    SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"}
 };
 
 void Settings::launch() {

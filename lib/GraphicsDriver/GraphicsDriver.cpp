@@ -6,6 +6,7 @@
 #include "LvglMutex.h"
 #include "AwakeManager.h"
 #include "ConfigManager.h"
+#include "driver/ledc.h" 
 
 GraphicsDriver::GraphicsDriver() {
     // Constructor
@@ -85,4 +86,43 @@ void GraphicsDriver::setupTouchDriver(TouchDriver &touchDriver) {
     };
     indev_drv.user_data = &touchDriver;
     lv_indev_t *my_indev = lv_indev_drv_register(&indev_drv);
+}
+
+void GraphicsDriver::init_backlight_pwm() {
+    // Configure the PWM timer
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .duty_resolution  = LEDC_TIMER_13_BIT,
+        .timer_num        = PWM_TIMER,
+        .freq_hz          = PWM_FREQUENCY,
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ledc_timer_config(&ledc_timer);
+
+    // Configure the PWM channel
+    ledc_channel_config_t ledc_channel = {
+        .gpio_num       = LCD_BL_GPIO,
+        .speed_mode     = LEDC_LOW_SPEED_MODE,
+        .channel        = PWM_CHANNEL,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .timer_sel      = PWM_TIMER,
+        .duty           = 0, // Start with backlight off
+        .hpoint         = 0
+    };
+    ledc_channel_config(&ledc_channel);
+}
+
+// Set the backlight brightness from 1 to 10
+void GraphicsDriver::set_backlight_brightness(uint8_t brightness) {
+    if (brightness < 1) brightness = 1;
+    if (brightness > 10) brightness = 10;
+
+    // Calculate duty cycle based on brightness level (1-10)
+    uint32_t duty = (brightness * MAX_DUTY_CYCLE) / 10;
+    
+    // Set the duty cycle to adjust brightness
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL, duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL);
+
+    ESP_LOGI(TAG, "Backlight brightness set to %d/10", brightness);
 }
