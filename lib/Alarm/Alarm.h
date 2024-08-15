@@ -4,9 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "TextComponent.h"
-#include "ListComponent.h"
-#include "UIManager.h"
 #include <memory>
 #include <vector>
 #include "AppManager.h"

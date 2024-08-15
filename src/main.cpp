@@ -4,12 +4,9 @@ extern "C" {
 #include "freertos/task.h"
 #include <stdio.h>
 #include "sdkconfig.h"
-// #include "HD44780.h"
 }
 
-#include "UIManager.h"
 #include "TimeManager.h"
-#include "TextComponent.h"
 #include "InputManager.h"
 #include "FileManager.h"
 #include "AwakeManager.h"
@@ -62,7 +59,6 @@ extern "C" void app_main() {
     // setup GPIO for the awake manager
     AwakeManager::init();
 
-    static UIManager uiManager;
     static FileManager fileManager;
     // Initialize the ConfigManager with the path to the configuration file
     // fileManager.writeData("ConfigManager", "config.txt", "");
@@ -71,7 +67,7 @@ extern "C" void app_main() {
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
-    static AppManager appManager(touchDriver, uiManager, fileManager, inputManager, batteryManager);
+    static AppManager appManager(touchDriver, fileManager, inputManager, batteryManager);
 
     Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);

@@ -1,5 +1,4 @@
 #include "Stopwatch.h"
-#include "TextComponent.h"
 #include <chrono>
 #include <esp_log.h>
 #include <memory>

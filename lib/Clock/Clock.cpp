@@ -97,6 +97,7 @@ void Clock::close() {
         batteryUpdateTimer = NULL;
     }
 
+    printf("Deleting screenObj: %p\n", (void*)screenObj);
     if (screenObj && lv_obj_is_valid(screenObj)) {
         lv_obj_del(screenObj);
         screenObj = NULL;

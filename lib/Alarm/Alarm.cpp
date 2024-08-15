@@ -1,6 +1,5 @@
 #include "Alarm.h"
 #include <sstream>
-#include "ClockComponent.h"
 
 Alarm::Alarm(AppManager& manager) : IApp(manager), alarmCheckTaskHandle(nullptr), selectedAlarmId(-1) {
     deserializeAlarms();

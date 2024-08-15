@@ -1,7 +1,6 @@
 #ifndef GRAPHICS_DRIVER_H
 #define GRAPHICS_DRIVER_H
 
-#include "IUIComponent.h"
 #include <string>
 #include <map>
 #include <memory>
@@ -23,7 +22,6 @@ private:
 public:
     GraphicsDriver();
     void init();
-    void addTextToCenter(const char *text);
     void setupTouchDriver(TouchDriver &touchDriver);
 };
 
