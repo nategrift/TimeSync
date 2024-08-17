@@ -21,85 +21,47 @@ Settings::~Settings() {
 
 }
 
-ReadCallback createIntReadCallback(const std::string& group, const std::string& key) {
-    return [group, key]() -> std::string {
-        int value = ConfigManager::getConfigInt(group, key);
-        return std::to_string(value);
-    };
-}
-
-WriteCallback createIntWriteCallback(const std::string& group, const std::string& key) {
-    return [group, key](const std::string& value) {
-        int intValue = std::stoi(value);
-        ConfigManager::setConfigInt(group, key, intValue);
-    };
-}
-
-ReadCallback createStrReadCallback(const std::string& group, const std::string& key) {
-    return [group, key]() -> std::string {
-        return ConfigManager::getConfigString(group, key);
-    };
-}
-
-WriteCallback createStrWriteCallback(const std::string& group, const std::string& key) {
-    return [group, key](const std::string& value) {
-        ConfigManager::setConfigString(group, key, value);
-    };
-}
-
-ReadCallback createTimeReadCallback(const std::string& group, const std::string& key) {
-    return [group, key]() -> std::string {
-        return ConfigManager::getConfigString(group, key);
-    };
-}
-
-WriteCallback createTimeWriteCallback(const std::string& group, const std::string& key) {
-    return [group, key](const std::string& value) {
-        int hour, minute, second;
-        sscanf(value.c_str(), "%d:%d:%d",
-           &hour,
-           &minute,
-           &second);
-        
-        TimeManager::setTime(hour, minute, second);
-    };
-}
-
-ReadCallback createDateReadCallback(const std::string& group, const std::string& key) {
-    return [group, key]() -> std::string {
-        return ConfigManager::getConfigString(group, key);
-    };
-}
-
-WriteCallback createDateWriteCallback(const std::string& group, const std::string& key) {
-    return [group, key](const std::string& value) {
-        int year, month, day;
-        sscanf(value.c_str(), "%d-%d-%d",
-           &year,
-           &month,
-           &day);
-        
-        TimeManager::setDate(year, month, day);
-    };
-}
-
-
-
 static std::vector<Setting> generalSettings = {
-    {"Screen Timeout", createIntReadCallback("General", "ScreenTimeout"), createIntWriteCallback("General", "ScreenTimeout"), SettingType::INT, 
-        "5\n10\n15\n20\n25\n30\n35\n40\n45\n50\n55\n60\n65\n70\n75\n80\n85\n90\n95"},
-    {"Clock Time", createTimeReadCallback("General", "Time"), createTimeWriteCallback("General", "Time"), SettingType::TIME, nullptr},
-    {"Clock Date", createDateReadCallback("General", "Date"), createDateWriteCallback("General", "Date"), SettingType::DATE, nullptr},
+    // Screen Timeout
+    {"Screen Timeout", 
+    []() -> std::string {
+        return std::to_string(ConfigManager::getConfigInt("General", "ScreenTimeout"));
+    }, 
+    [](const std::string& value) {
+        ConfigManager::setConfigInt("General", "ScreenTimeout", std::stoi(value));
+    }, SettingType::INT, "5\n10\n15\n20\n25\n30\n35\n40\n45\n50\n55\n60\n65\n70\n75\n80\n85\n90\n95"},
+
+    // Time
+    {"Clock Time", []() -> std::string {
+        return ConfigManager::getConfigString("General", "Time");
+    }, 
+    [](const std::string& value) {
+        int hour, minute, second;
+        sscanf(value.c_str(), "%d:%d:%d", &hour, &minute, &second);
+        TimeManager::setTime(hour, minute, second);
+    }, SettingType::TIME, nullptr},
+
+    // Date
+    {"Clock Date", 
+    []() -> std::string {
+        return ConfigManager::getConfigString("General", "Date");
+    }, 
+    [](const std::string& value) {
+        int year, month, day;
+        sscanf(value.c_str(), "%d-%d-%d", &year, &month, &day);
+        TimeManager::setDate(year, month, day);
+    }, SettingType::DATE, nullptr},
+
+    // Brightness
     {"Brightness", 
     []() -> std::string {
-        return std::to_string(ConfigManager::getConfigInt("General", "Brightness"));
+        return ConfigManager::getConfigString("General", "Brightness");
     }, 
     [](const std::string& value) {
         int brightness = std::stoi(value);
         GraphicsDriver::set_backlight_brightness(brightness);
         ConfigManager::setConfigInt("General", "Brightness", brightness);
-    }, 
-    SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"}
+    }, SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"}
 };
 
 void Settings::launch() {

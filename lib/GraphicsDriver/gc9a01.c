@@ -97,7 +97,7 @@ void gc9a01_reload() {
 
         ESP_ERROR_CHECK(esp_lcd_panel_invert_color(panel_handle, true));
 
-        ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
+        // ESP_ERROR_CHECK(esp_lcd_panel_mirror(panel_handle, true, false));
 
         ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
     }

@@ -93,6 +93,7 @@ void Clock::close() {
         timeListenerId = -1;
     }
     if (batteryUpdateTimer) {
+        lv_timer_pause(batteryUpdateTimer);
         lv_timer_del(batteryUpdateTimer);
         batteryUpdateTimer = NULL;
     }
@@ -120,13 +121,13 @@ void Clock::handleTimeUpdate(const struct tm& timeinfo) {
     strftime(date_buf, sizeof(date_buf), "%b %d %Y", &timeinfo);  // %b is abbreviated month name
 
     // Update the time label
-    if (lv_obj_is_valid(clockTimeLabel)) {
+    if (clockTimeLabel && lv_obj_is_valid(clockTimeLabel)) {
         lv_label_set_text(clockTimeLabel, time_buf);
         lv_obj_align(clockTimeLabel, LV_ALIGN_CENTER, 0, 0);\
     }
 
     // Update the date label
-    if (lv_obj_is_valid(clockDateLabel)) {
+    if (clockDateLabel && lv_obj_is_valid(clockDateLabel)) {
         lv_label_set_text(clockDateLabel, date_buf);
         lv_obj_align(clockDateLabel, LV_ALIGN_CENTER, 0, 25);
     }
@@ -137,10 +138,12 @@ void Clock::handleTimeUpdate(const struct tm& timeinfo) {
 void Clock::updateBatteryLevel() {
     uint8_t battery_level = batteryManager.getBatteryLevel();
     bool battery_charging = batteryManager.getBatteryCharging();
-    char battery_text[10];
-    snprintf(battery_text, sizeof(battery_text), "%d%%", battery_level);
+    char battery_text[10] = "PWR";
+    if (!battery_charging) {
+        snprintf(battery_text, sizeof(battery_text), "%d%%", battery_level);
+    }
 
-    if (batteryLabel) {
+    if (batteryLabel && lv_obj_is_valid(batteryLabel)) {
         lv_label_set_text(batteryLabel, battery_text);
         lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
     }

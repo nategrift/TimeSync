@@ -96,5 +96,7 @@ extern "C" void app_main() {
 
     int brightness = ConfigManager::getConfigInt("General", "Brightness");
     GraphicsDriver::set_backlight_brightness(brightness);
+    
+    lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
 }
 

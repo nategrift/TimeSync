@@ -63,7 +63,7 @@ uint8_t BatteryManager::getBatteryLevel() {
 
 bool BatteryManager::getBatteryCharging() {
     float battery_voltage = getBatteryVoltage();
-    if (battery_voltage >= 4.5) {
+    if (battery_voltage >= 4.2) {
         return true;
     }
 
