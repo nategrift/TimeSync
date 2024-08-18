@@ -125,9 +125,21 @@ void lvglDisplayConfig(void)
         .callback = &example_increase_lvgl_tick,
         .name = "lvgl_tick"
     };
-    esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
-
 }
-/*************************************** USEFUL ELECTRONICS*****END OF FILE****/
+
+
+void pause_lvgl_tick_timer() {
+    if (lvgl_tick_timer != NULL) {
+        ESP_LOGI(TAG, "Pausing LVGL tick timer");
+        ESP_ERROR_CHECK(esp_timer_stop(lvgl_tick_timer));
+    }
+}
+
+void resume_lvgl_tick_timer() {
+    if (lvgl_tick_timer != NULL) {
+        ESP_LOGI(TAG, "Resuming LVGL tick timer");
+        ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
+    }
+}

@@ -19,10 +19,17 @@ AppSelector::~AppSelector() {
 
 }
 
+static bool is_scrolling = false;
+static lv_timer_t *scroll_timer = nullptr;
 
 static void scroll_event_cb(lv_event_t * e)
 {
-    
+    if (scroll_timer != nullptr) {
+        lv_timer_del(scroll_timer);
+        scroll_timer = nullptr;
+    }
+
+    is_scrolling = true;
     lv_obj_t * cont = lv_event_get_target(e);
 
     lv_area_t cont_a;
@@ -61,6 +68,11 @@ static void scroll_event_cb(lv_event_t * e)
         lv_opa_t opa = lv_map(x, 0, r, LV_OPA_TRANSP, LV_OPA_COVER);
         lv_obj_set_style_opa(child, LV_OPA_COVER - opa, 0);
     }
+    
+    scroll_timer = lv_timer_create([](lv_timer_t * timer) {
+        is_scrolling = false;
+        scroll_timer = nullptr; // Clear the reference to indicate the timer is done
+    }, 200, nullptr);
 }
 
 void AppSelector::launch() {
@@ -105,7 +117,7 @@ void AppSelector::launch() {
         lv_event_code_t code = lv_event_get_code(event);
         lv_obj_t* target = lv_event_get_target(event);
 
-        if (code == LV_EVENT_CLICKED) {
+        if (code == LV_EVENT_CLICKED && !is_scrolling) {
             AppSelector* appSelector = reinterpret_cast<AppSelector*>(lv_event_get_user_data(event));
             const char* selected = lv_list_get_btn_text(appSelector->screenObj, target);
             ESP_LOGI("AppSelector", "AppSelector chooses app id of %s", selected);
@@ -130,7 +142,7 @@ void AppSelector::launch() {
 
 void AppSelector::close() {
     if (screenObj) {
-        lv_obj_del(screenObj);
+        lv_obj_del_async(screenObj);
         screenObj = nullptr;
     }
 }

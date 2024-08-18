@@ -3,9 +3,9 @@
 #include "esp_log.h"
 #include <vector>
 
-
 extern "C" {
 #include "gc9a01.h"
+#include "display.h"
 }
 
 static const char *TAG = "AwakeManager";
@@ -53,6 +53,8 @@ void AwakeManager::init() {
 void AwakeManager::sleepDevice() {
     ESP_LOGI(TAG, "Entering light sleep...");
 
+    pause_lvgl_tick_timer();
+
     pause_all_lvgl_timers();
     
     lv_obj_invalidate(lv_scr_act());
@@ -72,6 +74,8 @@ void AwakeManager::sleepDevice() {
 void AwakeManager::wakeDevice(int before_sleep_time) {
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();
+    resume_lvgl_tick_timer();
+
     resume_all_lvgl_timers();
 
     ESP_LOGI(TAG, "Waking up from sleep...");

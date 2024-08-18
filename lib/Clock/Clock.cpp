@@ -100,7 +100,7 @@ void Clock::close() {
 
     printf("Deleting screenObj: %p\n", (void*)screenObj);
     if (screenObj && lv_obj_is_valid(screenObj)) {
-        lv_obj_del(screenObj);
+        lv_obj_del_async(screenObj);
         screenObj = NULL;
         batteryIcon = NULL;
         batteryLabel = NULL;
