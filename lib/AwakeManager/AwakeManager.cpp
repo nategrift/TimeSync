@@ -1,6 +1,5 @@
 #include "AwakeManager.h"
 #include "esp_sleep.h"
-#include "esp_pm.h"
 #include "esp_log.h"
 #include <vector>
 
@@ -49,13 +48,6 @@ void AwakeManager::init() {
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_conf);
-
-    esp_pm_config_esp32s3_t pm_config = {
-        .max_freq_mhz = 240,
-        .min_freq_mhz = 40,
-        .light_sleep_enable = true // Enable light sleep
-    };
-    esp_pm_configure(&pm_config);
 }
 
 void AwakeManager::sleepDevice() {
