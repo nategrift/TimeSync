@@ -26,7 +26,7 @@ std::string ConfigManager::getConfigString(const std::string& group, const std::
         return configMap[group][key];
     } else if (defaultConfigMap.find(group) != defaultConfigMap.end() && 
                defaultConfigMap[group].find(key) != defaultConfigMap[group].end()) {
-        ESP_LOGW(TAG, "Using default config value for group: %s, key: %s", group.c_str(), key.c_str());
+        // ESP_LOGW(TAG, "Using default config value for group: %s, key: %s", group.c_str(), key.c_str());
         return defaultConfigMap[group][key];
     }
     ESP_LOGW(TAG, "Config value not found and no default available for group: %s, key: %s", group.c_str(), key.c_str());
@@ -39,7 +39,7 @@ int ConfigManager::getConfigInt(const std::string& group, const std::string& key
         return std::stoi(configMap[group][key]);
     } else if (defaultConfigMap.find(group) != defaultConfigMap.end() && 
                defaultConfigMap[group].find(key) != defaultConfigMap[group].end()) {
-        ESP_LOGW(TAG, "Using default config value for group: %s, key: %s", group.c_str(), key.c_str());
+        // ESP_LOGW(TAG, "Using default config value for group: %s, key: %s", group.c_str(), key.c_str());
         return std::stoi(defaultConfigMap[group][key]);
     }
     ESP_LOGW(TAG, "Config value not found and no default available for group: %s, key: %s", group.c_str(), key.c_str());

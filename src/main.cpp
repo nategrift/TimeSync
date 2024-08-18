@@ -15,6 +15,7 @@ extern "C" {
 
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
+#include "MotionDriver.h"
 
 #include <string>
 
@@ -44,6 +45,33 @@ extern "C" {
     UBaseType_t core = xPortGetCoreID();\
     const char* taskName = pcTaskGetName(NULL);\
     ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
+}
+
+
+void motionTask(void *pvParameters) {
+    MotionDriver *motionDriver = static_cast<MotionDriver *>(pvParameters);
+    
+    float gyroX, gyroY, gyroZ;
+    float accelX, accelY, accelZ;
+
+    while (true) {
+        // Read gyroscope data
+        if (motionDriver->readGyroscope(gyroX, gyroY, gyroZ) == ESP_OK) {
+            ESP_LOGI(TAG, "Gyroscope - X: %.2f, Y: %.2f, Z: %.2f", gyroX, gyroY, gyroZ);
+        } else {
+            ESP_LOGE(TAG, "Failed to read gyroscope data");
+        }
+
+        // Read accelerometer data
+        if (motionDriver->readAccelerometer(accelX, accelY, accelZ) == ESP_OK) {
+            ESP_LOGI(TAG, "Accelerometer - X: %.2f, Y: %.2f, Z: %.2f", accelX, accelY, accelZ);
+        } else {
+            ESP_LOGE(TAG, "Failed to read accelerometer data");
+        }
+
+        // Wait for 0.5 seconds
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
 }
 
 extern "C" void app_main() {
@@ -96,7 +124,13 @@ extern "C" void app_main() {
 
     int brightness = ConfigManager::getConfigInt("General", "Brightness");
     GraphicsDriver::set_backlight_brightness(brightness);
-    
-    lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
-}
 
+    lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
+
+    // MotionDriver motionDriver;
+
+    // motionDriver.init();
+
+    // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
+
+}
