@@ -5,6 +5,7 @@
 #include "AppManager.h"
 #include <string>
 #include <chrono>
+#include "LVGLMutex.h"
 
 class Stopwatch : public IApp {
 private:

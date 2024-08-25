@@ -16,6 +16,7 @@ extern "C" {
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
 #include "MotionDriver.h"
+#include "VibrationDriver.h"
 
 #include <string>
 
@@ -86,10 +87,11 @@ extern "C" void app_main() {
 
     // setup GPIO for the awake manager
     AwakeManager::init();
+    VibrationDriver::init();
 
     static FileManager fileManager;
     // Initialize the ConfigManager with the path to the configuration file
-    // fileManager.writeData("ConfigManager", "config.txt", "");
+    fileManager.writeData("ConfigManager", "config.txt", "");
     ConfigManager::init(fileManager, "config.txt");
     TimeManager::init();
     static InputManager inputManager(touchDriver);
@@ -132,5 +134,5 @@ extern "C" void app_main() {
     // motionDriver.init();
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
-
 }
+

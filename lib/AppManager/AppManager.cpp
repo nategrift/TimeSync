@@ -2,7 +2,6 @@
 #include "IApp.h"
 #include "lvgl.h"
 #include <algorithm>
-#include "LvglMutex.h"
 #include "esp_log.h"
 
 static const char* TAG = "AppManager";

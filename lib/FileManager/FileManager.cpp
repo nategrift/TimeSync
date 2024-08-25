@@ -62,7 +62,14 @@ std::string FileManager::readData(const std::string& app, const std::string& fil
         ESP_LOGE("FileManager", "Failed to open file for reading: %s", filepath.c_str());
         return "";
     }
-    std::string data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string data;
+    std::string line;
+    while (std::getline(file, line)) {
+        data += line + "\n";
+    }
+    if (!data.empty() && data.back() == '\n') {
+        data.pop_back();  // Remove the last newline if it exists
+    }
     file.close();
     return data;
 }

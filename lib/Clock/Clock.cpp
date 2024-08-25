@@ -1,7 +1,6 @@
 #include "Clock.h"
 #include "AppManager.h"
 #include "BatteryManager.h"
-#include "LvglMutex.h"
 
 #include "esp_log.h"
 #include "app_screen.h"

@@ -2,10 +2,10 @@
 #include <chrono>
 #include <esp_log.h>
 #include <memory>
-#include "LvglMutex.h"
 #include "app_screen.h"
 #include "TimeManager.h"
 #include "ui_components.h"
+#include "VibrationDriver.h"
 
 
 Stopwatch::Stopwatch(AppManager& manager) 
@@ -20,6 +20,7 @@ Stopwatch::~Stopwatch() {
 void Stopwatch::toggle_event_handler(lv_event_t * e)
 {
     Stopwatch* stopwatch = (Stopwatch*)lv_event_get_user_data(e);
+    VibrationDriver::quickVibration(100);
     if (stopwatch->isRunning) {
         stopwatch->stop();
     } else {

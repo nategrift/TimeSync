@@ -7,6 +7,7 @@
 #include "BatteryManager.h"
 #include "lvgl.h"
 #include "ui_components.h"
+#include "LVGLMutex.h"
 
 class Clock : public IApp {
 private:

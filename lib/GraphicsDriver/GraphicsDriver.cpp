@@ -3,7 +3,6 @@
 #define TAG "GraphicsDriver"
 
 #include "TouchDriver.h"
-#include "LvglMutex.h"
 #include "AwakeManager.h"
 #include "ConfigManager.h"
 #include "driver/ledc.h" 

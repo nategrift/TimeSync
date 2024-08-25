@@ -4,6 +4,7 @@
 #include "AppManager.h"
 #include "IApp.h"
 #include "lvgl.h"
+#include "LVGLMutex.h"
 
 class AppSelector : public IApp {
 private:

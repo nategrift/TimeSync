@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include "lvgl.h"
+#include "LVGLMutex.h"
 
 extern "C" {
 #include "display.h"

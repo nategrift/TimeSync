@@ -4,7 +4,6 @@
 #include "AppSelector.h"
 #include "lvgl.h"
 #include <string>
-#include "LvglMutex.h"
 #include "esp_log.h"
 
 static const char* TAG = "AppSelector";

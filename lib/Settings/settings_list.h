@@ -9,6 +9,7 @@
 #include "settings_edit.h"
 #include "esp_log.h"
 #include "ui_components.h"
+#include "VibrationDriver.h"
 
 // Function to create a settings list for a category using a flex container
 lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings, AppManager& appManager) {
@@ -38,6 +39,7 @@ lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings,
     lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
         AppManager* appManager = (AppManager*)(lv_event_get_user_data(e));
         if (appManager) {
+            VibrationDriver::quickVibration(200);
             appManager->launchApp("AppSelector");
             
         }

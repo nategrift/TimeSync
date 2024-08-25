@@ -11,6 +11,7 @@
 #include "BatteryManager.h"
 #include "utility"
 #include "TouchDriver.h"
+#include "LVGLMutex.h"
 
 class IApp;
 
