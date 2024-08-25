@@ -30,6 +30,7 @@ public:
     void setupTouchDriver(TouchDriver &touchDriver);
     static void init_backlight_pwm();
     static void set_backlight_brightness(uint8_t brightness);
+    static void turn_off_screen();  // Added this line
 };
 
 #endif // GRAPHICS_DRIVER_H

@@ -53,18 +53,23 @@ bool ConfigManager::hasConfigValue(const std::string& group, const std::string& 
 
 // Set a configuration value as a string
 bool ConfigManager::setConfigString(const std::string& group, const std::string& key, const std::string& value) {
-    configMap[group][key] = value;
-    // TODO: only when we need to.
-    serializeConfig();
-    return true;
+    if (!hasConfigValue(group, key) || configMap[group][key] != value) {
+        configMap[group][key] = value;
+        serializeConfig();
+        return true;
+    }
+    return false;
 }
 
 // Set a configuration value as an integer
 bool ConfigManager::setConfigInt(const std::string& group, const std::string& key, int value) {
-    configMap[group][key] = std::to_string(value);
-    // TODO: only when we need to.
-    serializeConfig();
-    return true;
+    std::string strValue = std::to_string(value);
+    if (!hasConfigValue(group, key) || configMap[group][key] != strValue) {
+        configMap[group][key] = strValue;
+        serializeConfig();
+        return true;
+    }
+    return false;
 }
 
 // Serialize the configuration data using the fileManager

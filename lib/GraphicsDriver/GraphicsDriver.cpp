@@ -1,4 +1,3 @@
-
 #include "GraphicsDriver.h"
 #define TAG "GraphicsDriver"
 
@@ -124,4 +123,13 @@ void GraphicsDriver::set_backlight_brightness(uint8_t brightness) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL);
 
     ESP_LOGI(TAG, "Backlight brightness set to %d/10", brightness);
+}
+
+// New method to turn off the screen completely
+void GraphicsDriver::turn_off_screen() {
+    // Set the duty cycle to 0 (completely off)
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL, 0);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL);
+
+    ESP_LOGI(TAG, "Screen turned off completely");
 }
