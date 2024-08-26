@@ -113,10 +113,10 @@ extern "C" void app_main() {
     appManager.registerApp(settingsApp);
     appManager.registerApp(appSelector);
 
-    appManager.launchApp(clockApp->getAppName());
+    appManager.launchApp(settingsApp->getAppName());
 
     // Create tasks for time management
-    xTaskCreate(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL);
+    xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL, 0);
 
     ESP_LOGI(TAG, "Initializing GPIO");
     // Initialize GPIO
@@ -135,4 +135,3 @@ extern "C" void app_main() {
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
 }
-

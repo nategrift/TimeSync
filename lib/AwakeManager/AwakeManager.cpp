@@ -2,6 +2,8 @@
 #include "esp_sleep.h"
 #include "esp_log.h"
 #include <vector>
+#include "GraphicsDriver.h"
+#include "ConfigManager.h"
 
 extern "C" {
 #include "gc9a01.h"
@@ -50,45 +52,70 @@ void AwakeManager::init() {
     gpio_config(&io_conf);
 }
 
+#define WAKE_CHECK_INTERVAL_MS 3000
+
+// Add this global variable
+static bool has_notification = false;
+
 void AwakeManager::sleepDevice() {
     ESP_LOGI(TAG, "Entering light sleep...");
 
     pause_lvgl_tick_timer();
-
     pause_all_lvgl_timers();
     
     lv_obj_invalidate(lv_scr_act());
     lv_refr_now(NULL);
 
+    // Turn off the screen
+    GraphicsDriver::turn_off_screen();
+
     // Wait till all the SPI communications have been sent, then sleep
     vTaskDelay(pdMS_TO_TICKS(50));
 
-    int64_t before_sleep_time = esp_timer_get_time();
+    while (true) {
+        int64_t before_sleep_time = esp_timer_get_time();
 
-    esp_sleep_enable_ext0_wakeup(TOUCH_INT_PIN, 0);
-    esp_light_sleep_start();
+        esp_sleep_enable_timer_wakeup(WAKE_CHECK_INTERVAL_MS * 1000);
+        esp_sleep_enable_ext0_wakeup(TOUCH_INT_PIN, 0);
+        esp_light_sleep_start();
 
-    wakeDevice(before_sleep_time);
+        esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+
+        if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
+            // User interaction woke the device
+            wakeDevice(before_sleep_time);
+            break;
+        } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
+            // Check for notifications
+            if (has_notification) {
+                wakeDevice(before_sleep_time);
+                break;
+            }
+            // If no notification, continue sleeping
+        }
+    }
 }
 
 void AwakeManager::wakeDevice(int before_sleep_time) {
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();
     resume_lvgl_tick_timer();
-
     resume_all_lvgl_timers();
 
     ESP_LOGI(TAG, "Waking up from sleep...");
 
-    uint64_t after_sleep_time = esp_timer_get_time(); // Time after waking up
-    uint64_t sleep_duration = (after_sleep_time - before_sleep_time) / 1000; // Convert to milliseconds
+    uint64_t after_sleep_time = esp_timer_get_time();
+    uint64_t sleep_duration = (after_sleep_time - before_sleep_time) / 1000;
 
-    lv_tick_inc(sleep_duration); // Adjust LVGL tick count
+    lv_tick_inc(sleep_duration);
 
     lv_disp_trig_activity(NULL);
-    // Manually reset the inactivity timer by setting the last activity time to the current time
     lv_disp_t *disp = lv_disp_get_default();
     if (disp != NULL) {
         disp->last_activity_time = lv_tick_get();
     }
+
+    // Restore screen brightness
+    int brightness = ConfigManager::getConfigInt("General", "Brightness");
+    GraphicsDriver::set_backlight_brightness(brightness);
 }

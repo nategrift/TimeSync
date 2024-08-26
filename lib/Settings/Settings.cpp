@@ -8,9 +8,13 @@
 #include "ConfigManager.h"
 #include "GraphicsDriver.h"
 #include "TimeManager.h"
-
+#include "esp_system.h"
 
 static const char* TAG = "Settings";
+
+static void restart_esp32() {
+    esp_restart();
+}
 
 Settings::Settings(AppManager& manager)
     : IApp("Settings"), // Initialize the app name
@@ -61,7 +65,12 @@ static std::vector<Setting> generalSettings = {
         int brightness = std::stoi(value);
         GraphicsDriver::set_backlight_brightness(brightness);
         ConfigManager::setConfigInt("General", "Brightness", brightness);
-    }, SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"}
+    }, SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"},
+
+    {"Restart Device", 
+    []() -> std::string { return ""; }, 
+    [](const std::string& value) { restart_esp32(); }, 
+    SettingType::BUTTON, nullptr}
 };
 
 void Settings::launch() {

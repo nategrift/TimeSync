@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "app_screen.h"
 #include "ui_components.h"
+#include "esp_system.h"
 
 lv_obj_t* edit_screen = nullptr;
 lv_obj_t* previous_screen  = nullptr;
@@ -190,7 +191,19 @@ lv_obj_t* create_date_edit_screen(Setting* setting) {
     return screen;
 }
 
+lv_obj_t* create_button_edit_screen(Setting* setting) {
+    lv_obj_t* screen = get_settings_edit_screen(setting);
 
+    lv_obj_t * actionButton = get_button(screen, const_cast<char*>(setting->title.c_str()));
+    lv_obj_center(actionButton);
+
+    lv_obj_add_event_cb(actionButton, [](lv_event_t* e) {
+        Setting* setting = (Setting*)(lv_event_get_user_data(e));
+        setting->writeCallback("");
+    }, LV_EVENT_CLICKED, setting);
+
+    return screen;
+}
 
 // Function to open an edit screen
 void open_edit_screen(Setting* setting) {
@@ -214,6 +227,9 @@ void open_edit_screen(Setting* setting) {
             break;
         case SettingType::STRING:
             // create_string_edit_screen(screen, setting);
+            break;
+        case SettingType::BUTTON:
+            edit_screen = create_button_edit_screen(setting);
             break;
     }
     lv_scr_load_anim(edit_screen, LV_SCR_LOAD_ANIM_OVER_LEFT, 500, 0, false);

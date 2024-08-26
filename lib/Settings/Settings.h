@@ -14,6 +14,7 @@ enum class SettingType {
     TIME,
     BOOL,
     STRING,
+    BUTTON,
 };
 
 // Callback types
