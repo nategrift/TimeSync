@@ -18,14 +18,13 @@ private:
     static std::map<ListenerId, TimeUpdateListener> listeners;
     static ListenerId nextListenerId;
     static TaskHandle_t timeTaskHandle;
-    static struct tm timeinfo;
 
-    static void serializeTime(const struct tm& timeinfo);
-    static bool deserializeTime();
+    static struct tm timeinfo;
 
 public:
     static void init();
     static void initializeTime();
+    static const tm getTimeInfo();
     static void updateTime();
     static void setRTCTime(time_t t);
     static void setTime(int hour, int minute, int second);
@@ -34,6 +33,9 @@ public:
     static void timeTask(void* params);
     static ListenerId addTimeUpdateListener(const TimeUpdateListener& listener);
     static void removeTimeUpdateListener(ListenerId id);
+
+    static void serializeTime(const struct tm& timeinfo);
+    static bool deserializeTime();
 };
 
 #endif // TIMEMANAGER_H

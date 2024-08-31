@@ -13,6 +13,7 @@ lv_obj_t* get_default_roller(lv_obj_t* parent) {
     lv_obj_set_style_text_color(roller, COLOR_TEXT, LV_PART_SELECTED);
     lv_obj_set_style_radius(roller, 4, LV_PART_SELECTED);
 
+    lv_roller_set_visible_row_count(roller, 3);
 
     return roller;
 }

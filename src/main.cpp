@@ -4,6 +4,8 @@ extern "C" {
 #include "freertos/task.h"
 #include <stdio.h>
 #include "sdkconfig.h"
+
+#include "BuzzerDriver.h"
 }
 
 #include "TimeManager.h"
@@ -31,7 +33,6 @@ extern "C" {
 #include "AppSelector.h"
 #include "lvgl.h"
 // END APPS
-
 // Define GPIO pins for the joystick and button
 #define JOYSTICK_CHANNEL ADC2_CHANNEL_4
 #define BUTTON_PIN GPIO_NUM_16
@@ -113,7 +114,7 @@ extern "C" void app_main() {
     appManager.registerApp(settingsApp);
     appManager.registerApp(appSelector);
 
-    appManager.launchApp(settingsApp->getAppName());
+    appManager.launchApp(clockApp->getAppName());
 
     // Create tasks for time management
     xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL, 0);
@@ -129,6 +130,9 @@ extern "C" void app_main() {
 
     lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
 
+
+    init_buzzer();
+    
     // MotionDriver motionDriver;
 
     // motionDriver.init();

@@ -6,6 +6,8 @@
 #include "ConfigManager.h"
 #include "driver/ledc.h" 
 
+#define min_task_delay 3
+
 GraphicsDriver::GraphicsDriver() {
     // Constructor
 }
@@ -46,8 +48,8 @@ void GraphicsDriver::lvgl_task(void *arg) {
         int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
 
         // Ensure a minimum delay of 1 ms to prevent CPU lockup
-        if (delay_time_ms < 1) {
-            delay_time_ms = 1;
+        if (delay_time_ms < min_task_delay) {
+            delay_time_ms = min_task_delay;
         }
 
         vTaskDelay(pdMS_TO_TICKS(delay_time_ms));

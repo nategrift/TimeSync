@@ -4,6 +4,7 @@
 #include <vector>
 #include "GraphicsDriver.h"
 #include "ConfigManager.h"
+#include "TimeManager.h"
 
 extern "C" {
 #include "gc9a01.h"
@@ -118,4 +119,8 @@ void AwakeManager::wakeDevice(int before_sleep_time) {
     // Restore screen brightness
     int brightness = ConfigManager::getConfigInt("General", "Brightness");
     GraphicsDriver::set_backlight_brightness(brightness);
+
+    // set time right away
+    TimeManager::updateTime();
+    TimeManager::serializeTime(TimeManager::getTimeInfo());
 }

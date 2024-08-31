@@ -75,8 +75,14 @@ void Clock::launch() {
 
     // Set up the time update listener
     timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
+        LvglMutex::lock();
         this->handleTimeUpdate(timeinfo);
+        LvglMutex::unlock();
     });
+    // set default time
+    // unsafe calling because we already in lvgl loop
+    this->handleTimeUpdate(TimeManager::getTimeInfo());
+    
 
     // Update the battery level immediately and periodically
     updateBatteryLevel();
@@ -109,7 +115,6 @@ void Clock::close() {
 }
 
 void Clock::handleTimeUpdate(const struct tm& timeinfo) {
-    LvglMutex::lock();
 
     // Format time as "HH:MM:SS AM/PM"
     char time_buf[64];
@@ -130,8 +135,6 @@ void Clock::handleTimeUpdate(const struct tm& timeinfo) {
         lv_label_set_text(clockDateLabel, date_buf);
         lv_obj_align(clockDateLabel, LV_ALIGN_CENTER, 0, 25);
     }
-
-    LvglMutex::unlock();
 }
 
 void Clock::updateBatteryLevel() {

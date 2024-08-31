@@ -31,6 +31,10 @@ void TimeManager::initializeTime() {
     TimeManager::setRTCTime(now);
 }
 
+const tm TimeManager::getTimeInfo() {
+    return TimeManager::timeinfo;
+}
+
 void TimeManager::updateTime() {
     time_t now;
     time(&now);

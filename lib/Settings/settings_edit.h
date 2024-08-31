@@ -36,7 +36,8 @@ lv_obj_t* get_settings_edit_screen(Setting* setting) {
     lv_obj_add_event_cb(saveButton, [](lv_event_t * e) {
         lv_obj_t * btn = lv_event_get_target(e);
         lv_obj_t * background = lv_obj_get_parent(btn);
-
+        
+        ESP_LOGI("SETTINGS_EDIT_SCREEN", "Going back");
         lv_scr_load_anim(previous_screen, LV_SCR_LOAD_ANIM_OVER_RIGHT, 500, 0, true);
     }, LV_EVENT_CLICKED, nullptr);
 
