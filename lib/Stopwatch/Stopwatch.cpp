@@ -6,6 +6,7 @@
 #include "TimeManager.h"
 #include "ui_components.h"
 #include "VibrationDriver.h"
+#include "buzzer_driver.h"
 
 
 Stopwatch::Stopwatch(AppManager& manager) 
@@ -97,12 +98,14 @@ void Stopwatch::start() {
     startTime = std::chrono::system_clock::now();
     elapsed = 0;
     updateDisplay();
+    beep(100);
 }
 
 void Stopwatch::stop() {
     isRunning = false;
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
     updateDisplay();
+    beep(100);
 }
 
 void Stopwatch::updateDisplay() {

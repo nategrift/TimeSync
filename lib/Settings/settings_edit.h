@@ -206,6 +206,26 @@ lv_obj_t* create_button_edit_screen(Setting* setting) {
     return screen;
 }
 
+lv_obj_t* create_bool_edit_screen(Setting* setting) {
+    lv_obj_t* screen = get_settings_edit_screen(setting);
+
+    lv_obj_t * sw = lv_switch_create(screen);
+    lv_obj_center(sw);
+
+    // Set the initial state of the switch
+    bool currentState = (setting->readCallback() == "1");
+    lv_obj_add_state(sw, currentState ? LV_STATE_CHECKED : 0);
+
+    lv_obj_add_event_cb(sw, [](lv_event_t* e) {
+        lv_obj_t* sw = lv_event_get_target(e);
+        Setting* setting = (Setting*)(lv_event_get_user_data(e));
+        bool newState = lv_obj_has_state(sw, LV_STATE_CHECKED);
+        setting->writeCallback(newState ? "1" : "0");
+    }, LV_EVENT_VALUE_CHANGED, setting);
+
+    return screen;
+}
+
 // Function to open an edit screen
 void open_edit_screen(Setting* setting) {
     previous_screen = lv_scr_act();
@@ -224,7 +244,7 @@ void open_edit_screen(Setting* setting) {
             edit_screen = create_time_edit_screen(setting);
             break;
         case SettingType::BOOL:
-            // create_bool_edit_screen(screen, setting);
+            edit_screen = create_bool_edit_screen(setting);
             break;
         case SettingType::STRING:
             // create_string_edit_screen(screen, setting);

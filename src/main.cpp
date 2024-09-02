@@ -5,9 +5,9 @@ extern "C" {
 #include <stdio.h>
 #include "sdkconfig.h"
 
-#include "BuzzerDriver.h"
 }
 
+#include "buzzer_driver.h"
 #include "TimeManager.h"
 #include "InputManager.h"
 #include "FileManager.h"

@@ -63,7 +63,7 @@ lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings,
         lv_obj_set_align(label, LV_ALIGN_LEFT_MID);
 
         lv_obj_t* value = lv_label_create(btn);
-        lv_label_set_text(value, setting.readCallback().c_str());
+        lv_label_set_text(value, setting.displayValueCallback().c_str());
         lv_obj_set_style_text_color(value, lv_color_hex(0xDDDDDD), LV_PART_MAIN); // Almost white text
         lv_obj_set_align(value, LV_ALIGN_RIGHT_MID);
 
