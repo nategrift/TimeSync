@@ -30,7 +30,8 @@ lv_obj_t* create_settings_flex(lv_obj_t* parent, std::vector<Setting>& settings,
 
 
      // Create the back button
-    lv_obj_t* backBtn = get_button(container, "Home");
+    char* buttonLabel = "Home";
+    lv_obj_t* backBtn = get_button(container, buttonLabel);
     lv_obj_set_width(backBtn, lv_pct(100)); // Set initial width
     lv_obj_set_style_pad_all(backBtn, 15, LV_PART_MAIN); 
     lv_obj_center(backBtn);

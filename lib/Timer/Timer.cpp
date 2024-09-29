@@ -9,6 +9,7 @@ static const char* TAG = "Timer";
 
 int default_seconds = 5;
 
+Setting timeSetting;
 
 Timer::Timer(AppManager& manager)
     : IApp("Timer"),
@@ -36,7 +37,11 @@ void Timer::launch() {
     lv_style_set_text_color(&style_title, lv_color_hex(0xFF0000)); // Red color
     lv_obj_add_style(titleLabel, &style_title, 0);
 
-    timerLabel = lv_label_create(screenObj);
+    lv_obj_t* timerContainer = lv_btn_create(screenObj);
+    lv_obj_center(timerContainer);
+    lv_obj_set_style_shadow_width(timerContainer, 0, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(timerContainer, lv_color_hex(0x000000), LV_PART_MAIN);
+    timerLabel = lv_label_create(timerContainer);
     lv_label_set_text(timerLabel, "00:00:00");
     lv_obj_center(timerLabel);
 
@@ -48,7 +53,7 @@ void Timer::launch() {
     lv_obj_add_style(timerLabel, &style_time, 0);
 
     // Add click event to timerLabel
-    lv_obj_add_event_cb(timerLabel, timerLabelClickHandler, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(timerContainer, timerLabelClickHandler, LV_EVENT_CLICKED, this);
 
     stateButton = get_button(screenObj, "Start");
     lv_obj_align(stateButton, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -138,6 +143,7 @@ void Timer::setTimerDuration(int seconds) {
 }
 
 void Timer::timerLabelClickHandler(lv_event_t* e) {
+    ESP_LOGI(TAG, "timerLabelClickHandler called");
     Timer* timerApp = static_cast<Timer*>(lv_event_get_user_data(e));
     if (!timerApp->isTimerRunning()) {
         // Call the function to set the timer time (to be implemented later)
@@ -158,8 +164,6 @@ void Timer::showSetTimerDialog() {
     // This function will be implemented later to show a dialog for setting the timer duration
     ESP_LOGI(TAG, "showSetTimerDialog called");
 
-
-    Setting timeSetting;
     timeSetting.title = "Set Timer Duration";
     timeSetting.type = SettingType::TIME;
     timeSetting.readCallback = [this]() {
@@ -175,15 +179,10 @@ void Timer::showSetTimerDialog() {
         sscanf(newTime.c_str(), "%d:%d:%d", &hours, &minutes, &seconds);
         default_seconds = hours * 3600 + minutes * 60 + seconds;
         updateTimerDisplay();
-
-        if (previousScreen) {
-            lv_scr_load_anim(previousScreen, LV_SCR_LOAD_ANIM_OVER_RIGHT, 500, 0, true);
-            previousScreen = nullptr;
-        }
     };
 
-    lv_obj_t* timeEditScreen = create_time_edit_screen(&timeSetting);
     previousScreen = lv_scr_act();
+    lv_obj_t* timeEditScreen = create_time_edit_screen(&timeSetting, previousScreen);
     lv_scr_load_anim(timeEditScreen, LV_SCR_LOAD_ANIM_OVER_LEFT, 500, 0, false);
 }
 

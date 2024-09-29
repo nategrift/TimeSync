@@ -13,12 +13,12 @@ extern lv_obj_t* previous_screen;
 
 std::string create_roller_options(int start, int end);
 
-lv_obj_t* get_settings_edit_screen(Setting* setting);
-lv_obj_t* create_int_edit_screen(Setting* setting);
-lv_obj_t* create_time_edit_screen(Setting* setting);
-lv_obj_t* create_date_edit_screen(Setting* setting);
-lv_obj_t* create_button_edit_screen(Setting* setting);
-lv_obj_t* create_bool_edit_screen(Setting* setting);
+lv_obj_t* get_settings_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_int_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_time_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_date_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_button_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_bool_edit_screen(Setting* setting, lv_obj_t* previous_scr);
 
 void open_edit_screen(Setting* setting);
 
