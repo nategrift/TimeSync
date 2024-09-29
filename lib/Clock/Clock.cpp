@@ -75,10 +75,9 @@ void Clock::launch() {
 
     // Set up the time update listener
     timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
-        LvglMutex::lock();
         this->handleTimeUpdate(timeinfo);
-        LvglMutex::unlock();
     });
+
     // set default time
     // unsafe calling because we already in lvgl loop
     this->handleTimeUpdate(TimeManager::getTimeInfo());
@@ -93,17 +92,20 @@ void Clock::launch() {
 }
 
 void Clock::close() {
+    // Remove the time update listener
     if (timeListenerId != -1) {
         TimeManager::removeTimeUpdateListener(timeListenerId);
         timeListenerId = -1;
     }
+
+    // Stop and delete the battery update timer
     if (batteryUpdateTimer) {
         lv_timer_pause(batteryUpdateTimer);
         lv_timer_del(batteryUpdateTimer);
         batteryUpdateTimer = NULL;
     }
 
-    printf("Deleting screenObj: %p\n", (void*)screenObj);
+    // Delete the screen object and reset pointers
     if (screenObj && lv_obj_is_valid(screenObj)) {
         lv_obj_del_async(screenObj);
         screenObj = NULL;
@@ -115,7 +117,6 @@ void Clock::close() {
 }
 
 void Clock::handleTimeUpdate(const struct tm& timeinfo) {
-
     // Format time as "HH:MM:SS AM/PM"
     char time_buf[64];
     strftime(time_buf, sizeof(time_buf), "%I:%M:%S %p", &timeinfo);

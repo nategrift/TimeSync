@@ -20,6 +20,7 @@ private:
     AppManager& appManager;
     BatteryManager& batteryManager;
     lv_timer_t* batteryUpdateTimer;
+    bool isClosing;
 
 public:
     Clock(AppManager& manager);

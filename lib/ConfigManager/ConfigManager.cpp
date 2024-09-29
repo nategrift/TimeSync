@@ -98,10 +98,13 @@ bool ConfigManager::deserializeConfig() {
     }
 
     std::string fileData = fileManager->readData("ConfigManager", configFileName);
+
     if (fileData.empty()) {
         ESP_LOGE(TAG, "Failed to read data from file: %s", configFileName.c_str());
         return false;
     }
+
+    ESP_LOGI(TAG, "ConfigManager Data: %s", fileData.c_str());
 
     std::istringstream dataStream(fileData);
     std::string line;

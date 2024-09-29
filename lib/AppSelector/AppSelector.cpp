@@ -110,6 +110,8 @@ void AppSelector::launch() {
     lv_obj_add_style(btn_stopwatch, &style_btn, LV_PART_MAIN);
     lv_obj_t* btn_settings = lv_list_add_btn(screenObj, LV_SYMBOL_SETTINGS, "Settings");
     lv_obj_add_style(btn_settings, &style_btn, LV_PART_MAIN);
+    lv_obj_t* btn_timer = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Timer");
+    lv_obj_add_style(btn_timer, &style_btn, LV_PART_MAIN);
 
     // Add event handler for each button
     auto event_cb = [](lv_event_t* event) {
@@ -134,13 +136,14 @@ void AppSelector::launch() {
     lv_obj_scroll_to_view(lv_obj_get_child(screenObj, 0), LV_ANIM_OFF);
 
     lv_obj_add_event_cb(btn_clock, event_cb, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(btn_timer, event_cb, LV_EVENT_CLICKED, this);
     // lv_obj_add_event_cb(btn_alarm, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_stopwatch, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_settings, event_cb, LV_EVENT_CLICKED, this);
 }
 
 void AppSelector::close() {
-    if (screenObj) {
+    if (screenObj && lv_obj_is_valid(screenObj)) {
         lv_obj_del_async(screenObj);
         screenObj = nullptr;
     }

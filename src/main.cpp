@@ -14,6 +14,8 @@ extern "C" {
 #include "AwakeManager.h"
 #include "BatteryManager.h"
 #include "ConfigManager.h"
+#include "TimeEventsManager.h"
+#include "NotificationManager.h"
 
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
@@ -29,6 +31,7 @@ extern "C" {
 // #include "Alarm.h"
 #include "Clock.h"
 #include "Stopwatch.h"
+#include "Timer.h"
 #include "Settings.h"
 #include "AppSelector.h"
 #include "lvgl.h"
@@ -48,6 +51,7 @@ extern "C" {
     const char* taskName = pcTaskGetName(NULL);\
     ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
 }
+
 
 
 void motionTask(void *pvParameters) {
@@ -76,6 +80,7 @@ void motionTask(void *pvParameters) {
     }
 }
 
+
 extern "C" void app_main() {
     // Initialize GraphicsDriver
     GraphicsDriver graphicsDriver;
@@ -90,11 +95,15 @@ extern "C" void app_main() {
     AwakeManager::init();
     VibrationDriver::init();
 
-    static FileManager fileManager;
     // Initialize the ConfigManager with the path to the configuration file
+    static FileManager fileManager;
+    // ESP_LOGI(TAG, "Reset button held. Resetting configuration.");
     // fileManager.writeData("ConfigManager", "config.txt", "");
+    fileManager.writeData("TimeEvents", "events.csv", ""); 
+
     ConfigManager::init(fileManager, "config.txt");
     TimeManager::init();
+
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
@@ -103,6 +112,7 @@ extern "C" void app_main() {
     Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);
     Stopwatch* stopWatchApp = new Stopwatch(appManager);
+    Timer* timerApp = new Timer(appManager);
     Settings* settingsApp = new Settings(appManager);
 
     // Not selectable app
@@ -111,6 +121,7 @@ extern "C" void app_main() {
     appManager.registerApp(clockApp);
     // appManager.registerApp("Alarm", alarmApp);
     appManager.registerApp(stopWatchApp);
+    appManager.registerApp(timerApp);
     appManager.registerApp(settingsApp);
     appManager.registerApp(appSelector);
 
@@ -132,10 +143,16 @@ extern "C" void app_main() {
 
 
     init_buzzer();
-    
+
+    xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
+
     // MotionDriver motionDriver;
 
     // motionDriver.init();
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
+
+    // Initialize TimeEventsManager
+    TimeEventsManager::init();
+
 }

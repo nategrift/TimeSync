@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include <string>
 #include "ConfigManager.h"
+#include "LVGLMutex.h"
 
 static const char* TAG = "TimeManager";
 
@@ -81,8 +82,10 @@ void TimeManager::getTime(int &hour, int &minute, int &second) {
 void TimeManager::timeTask(void* params) {
     int serializeCount = SERIALIZE_FREQUENCY / TIME_FREQUENCY;
     while (1) {
+        LvglMutex::lock();
         TimeManager::updateTime();
-
+        LvglMutex::unlock();
+        
         // if we should serialize, do so
         if (serializeCount <= 0) {
             TimeManager::serializeTime(TimeManager::timeinfo);

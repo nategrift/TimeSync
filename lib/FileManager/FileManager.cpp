@@ -16,6 +16,8 @@ FileManager::FileManager() {
         .format_if_mount_failed = true
     };
 
+    esp_vfs_spiffs_unregister(NULL);
+
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
     if (ret != ESP_OK) {
         if (ret == ESP_FAIL) {

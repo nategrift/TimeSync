@@ -155,3 +155,17 @@ void beep(int ms_duration) {
     
     launch_buzz_pattern(pattern, 1, 3);
 }
+
+void incremental_buzz_pattern(int duration_ms) {
+    int interval = 700; // 0.7 seconds in milliseconds
+    int patternLength = (duration_ms / (2 * interval)) * 2;
+    int* pattern = (int*)malloc(patternLength * sizeof(int));
+
+    for (int i = 0; i < patternLength; i += 2) {
+        pattern[i] = interval;     // On
+        pattern[i + 1] = -interval; // Off
+    }
+
+    launch_buzz_pattern(pattern, patternLength, 1);
+    free(pattern);
+}

@@ -151,7 +151,7 @@ void Settings::launch() {
 }
 
 void Settings::close() {
-    if (screenObj) {
+    if (screenObj && lv_obj_is_valid(screenObj)) {
         lv_obj_del_async(screenObj);
         screenObj = NULL;
     }

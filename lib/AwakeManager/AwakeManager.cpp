@@ -5,6 +5,7 @@
 #include "GraphicsDriver.h"
 #include "ConfigManager.h"
 #include "TimeManager.h"
+#include "TimeEventsManager.h"
 
 extern "C" {
 #include "gc9a01.h"
@@ -55,8 +56,6 @@ void AwakeManager::init() {
 
 #define WAKE_CHECK_INTERVAL_MS 3000
 
-// Add this global variable
-static bool has_notification = false;
 
 void AwakeManager::sleepDevice() {
     ESP_LOGI(TAG, "Entering light sleep...");
@@ -88,8 +87,10 @@ void AwakeManager::sleepDevice() {
             break;
         } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
             // Check for notifications
-            if (has_notification) {
+            std::vector<TimeEvent> expiredEvents = TimeEventsManager::getExpiredTimeEvents();
+            if (!expiredEvents.empty()) {
                 wakeDevice(before_sleep_time);
+                TimeEventsManager::checkAndNotifyExpiredEvents();
                 break;
             }
             // If no notification, continue sleeping

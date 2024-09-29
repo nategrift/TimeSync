@@ -75,9 +75,7 @@ void Stopwatch::launch() {
     timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
         if (this->isRunning) {
             this->elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - this->startTime).count();
-            LvglMutex::lock();
             this->updateDisplay();
-            LvglMutex::unlock();
         }
     });
 }

@@ -182,9 +182,9 @@ lv_obj_t *get_app_container(AppManager &appManager)
     return screenObj;
 }
 
-lv_obj_t *get_blank_screen()
+lv_obj_t *get_blank_screen(lv_obj_t *parent)
 {
-    lv_obj_t *screenObj = lv_obj_create(NULL);
+    lv_obj_t *screenObj = lv_obj_create(parent);
     lv_obj_set_size(screenObj, LV_HOR_RES, LV_VER_RES);
     lv_obj_center(screenObj);
     lv_obj_set_style_bg_color(screenObj, lv_color_hex(0x000000), LV_PART_MAIN);
