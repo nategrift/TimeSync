@@ -12,8 +12,16 @@ public:
     ~MotionDriver();
 
     esp_err_t init();
+    esp_err_t enableGyroAndAcc();
     esp_err_t readGyroscope(float &x, float &y, float &z);
     esp_err_t readAccelerometer(float &x, float &y, float &z);
+
+    esp_err_t resetStepCount();
+    esp_err_t readStepCount(uint32_t &stepCount);
+    esp_err_t enablePedometer();
+    esp_err_t configurePedometer();
+    esp_err_t isPedometerRunning(bool &isRunning);
+
 
 private:
     esp_err_t readRegister(uint8_t reg, uint8_t *data, size_t len);

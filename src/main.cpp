@@ -57,26 +57,23 @@ extern "C" {
 void motionTask(void *pvParameters) {
     MotionDriver *motionDriver = static_cast<MotionDriver *>(pvParameters);
     
-    float gyroX, gyroY, gyroZ;
-    float accelX, accelY, accelZ;
+    uint32_t stepCount = 0;
 
     while (true) {
-        // Read gyroscope data
-        if (motionDriver->readGyroscope(gyroX, gyroY, gyroZ) == ESP_OK) {
-            ESP_LOGI(TAG, "Gyroscope - X: %.2f, Y: %.2f, Z: %.2f", gyroX, gyroY, gyroZ);
+        motionDriver->readStepCount(stepCount);
+
+        ESP_LOGI(TAG, "Step Count %d", (int)stepCount);
+        bool isPedometerRunning;
+        esp_err_t ret = motionDriver->isPedometerRunning(isPedometerRunning);
+        if (ret == ESP_OK) {
+            ESP_LOGI(TAG, "Pedometer is %s", isPedometerRunning ? "running" : "stopped");
         } else {
-            ESP_LOGE(TAG, "Failed to read gyroscope data");
+            ESP_LOGE(TAG, "Failed to check pedometer status");
         }
 
-        // Read accelerometer data
-        if (motionDriver->readAccelerometer(accelX, accelY, accelZ) == ESP_OK) {
-            ESP_LOGI(TAG, "Accelerometer - X: %.2f, Y: %.2f, Z: %.2f", accelX, accelY, accelZ);
-        } else {
-            ESP_LOGE(TAG, "Failed to read accelerometer data");
-        }
 
-        // Wait for 0.5 seconds
-        vTaskDelay(pdMS_TO_TICKS(500));
+        // Wait for 2 seconds
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
 
@@ -147,8 +144,12 @@ extern "C" void app_main() {
     xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
 
     // MotionDriver motionDriver;
-
     // motionDriver.init();
+    // vTaskDelay(pdMS_TO_TICKS(100));
+    // motionDriver.enableGyroAndAcc();
+    // vTaskDelay(pdMS_TO_TICKS(100));
+    // esp_err_t ret = motionDriver.enablePedometer();
+    // if (ret != ESP_OK) ESP_LOGI(TAG, "can;t enable petometer");;
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
 

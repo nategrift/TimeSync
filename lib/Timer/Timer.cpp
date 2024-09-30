@@ -19,7 +19,14 @@ Timer::Timer(AppManager& manager)
       appManager(manager),
       timeListenerId(-1),
       remainingSeconds(default_seconds),
-      previousScreen(NULL) {}
+      previousScreen(NULL) {
+        // Read default_seconds from file
+        FileManager& fileManager = appManager.getFileManager();
+        std::string data = fileManager.readData("TimerApp", "timer_settings.txt");
+        if (!data.empty()) {
+            default_seconds = std::stoi(data);
+        }
+      }
 
 Timer::~Timer() {}
 
@@ -139,6 +146,11 @@ void Timer::stopTimer() {
 
 void Timer::setTimerDuration(int seconds) {
     remainingSeconds = seconds;
+    default_seconds = seconds;
+
+    FileManager& fileManager = appManager.getFileManager();
+    fileManager.writeData("TimerApp", "timer_settings.txt", std::to_string(default_seconds));
+
     updateTimerDisplay();
 }
 
@@ -177,7 +189,13 @@ void Timer::showSetTimerDialog() {
     timeSetting.writeCallback = [this](const std::string& newTime) {
         int hours, minutes, seconds;
         sscanf(newTime.c_str(), "%d:%d:%d", &hours, &minutes, &seconds);
-        default_seconds = hours * 3600 + minutes * 60 + seconds;
+        int totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        setTimerDuration(totalSeconds);
+
+        // Write default_seconds to file
+        FileManager& fileManager = appManager.getFileManager();
+        fileManager.writeData("TimerApp", "timer_settings.txt", std::to_string(default_seconds));
+
         updateTimerDisplay();
     };
 
