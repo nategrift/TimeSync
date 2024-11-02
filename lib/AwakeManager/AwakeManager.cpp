@@ -123,5 +123,5 @@ void AwakeManager::wakeDevice(int before_sleep_time) {
 
     // set time right away
     TimeManager::updateTime();
-    TimeManager::serializeTime(TimeManager::getTimeInfo());
+    TimeManager::serializeTime();
 }

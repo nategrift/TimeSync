@@ -19,12 +19,10 @@ private:
     static ListenerId nextListenerId;
     static TaskHandle_t timeTaskHandle;
 
-    static struct tm timeinfo;
-
 public:
     static void init();
-    static void initializeTime();
-    static const tm getTimeInfo();
+    static const tm getLocalTimeInfo();
+    static const tm getUTCTimeInfo();
     static void updateTime();
     static void setRTCTime(time_t t);
     static void setTime(int hour, int minute, int second);
@@ -34,7 +32,7 @@ public:
     static ListenerId addTimeUpdateListener(const TimeUpdateListener& listener);
     static void removeTimeUpdateListener(ListenerId id);
 
-    static void serializeTime(const struct tm& timeinfo);
+    static void serializeTime();
     static bool deserializeTime();
 };
 

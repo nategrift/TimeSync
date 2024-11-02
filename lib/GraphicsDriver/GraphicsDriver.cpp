@@ -21,7 +21,7 @@ void GraphicsDriver::init() {
     LvglMutex::init();
 
     // // Create LVGL task
-    xTaskCreate(lvgl_task, "Rendering Task", 96000, NULL, 5, NULL);
+    xTaskCreate(lvgl_task, "Rendering Task", 128000, NULL, 5, NULL);
 }
 
 void GraphicsDriver::lvgl_task(void *arg) {

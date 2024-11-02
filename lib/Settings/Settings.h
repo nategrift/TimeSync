@@ -37,7 +37,8 @@ class Settings : public IApp {
 private:
     lv_obj_t* screenObj;
     AppManager& appManager;
-
+    std::vector<Setting> generalSettings;
+    std::vector<Setting> networkSettings;
 public:
     Settings(AppManager& manager);
     ~Settings() override;

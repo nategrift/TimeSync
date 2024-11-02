@@ -127,9 +127,6 @@ lv_obj_t* create_time_edit_screen(Setting* setting, lv_obj_t* previous_scr) {
     return screen;
 }
 
-
-
-
 lv_obj_t* create_date_edit_screen(Setting* setting, lv_obj_t* previous_scr) {
     lv_obj_t* screen = get_settings_edit_screen(setting, previous_scr);
 
@@ -226,10 +223,124 @@ lv_obj_t* create_bool_edit_screen(Setting* setting, lv_obj_t* previous_scr) {
     return screen;
 }
 
+
+static const char* btnm_map_ABC[] = {"ABC", "DEF", "GHI", LV_SYMBOL_BACKSPACE, "\n",
+                                     "JKL", "MNO", "PQRS", LV_SYMBOL_UP, "\n",
+                                     "TUV", "WXYZ", ".,?!", LV_SYMBOL_OK, "\n",
+                                     " ", "0", "Space", " ", ""};
+
+static const char* btnm_map_abc[] = {"abc", "def", "ghi", LV_SYMBOL_BACKSPACE, "\n",
+                                     "jkl", "mno", "pqrs", LV_SYMBOL_UP, "\n",
+                                     "tuv", "wxyz", ".,?!", LV_SYMBOL_OK, "\n",
+                                     " ", "0", "Space", " ", ""};
+
+static const char* btnm_map_123[] = {"1", "2", "3", LV_SYMBOL_BACKSPACE, "\n",
+                                     "4", "5", "6", LV_SYMBOL_UP, "\n",
+                                     "7", "8", "9", LV_SYMBOL_OK, "\n",
+                                     " ", "0", "Space", " ", ""};
+
+static const char* btnm_map_symbols[] = {"`@#", "$%^", "&*-", LV_SYMBOL_BACKSPACE, "\n",
+                                         "({[", "]})", "_+=", LV_SYMBOL_UP, "\n",
+                                         "|\\/", ";:'", "\"<>", LV_SYMBOL_OK, "\n",
+                                         " ", ",.?!~", "Space", " ", ""};
+
+static const char** current_map = btnm_map_ABC;
+static int map_index = 0;
+static const int NUM_MAPS = 4;
+static const char*** all_maps = new const char**[NUM_MAPS]{btnm_map_ABC, btnm_map_abc, btnm_map_123, btnm_map_symbols};
+
+lv_obj_t* create_string_edit_screen(Setting* setting, lv_obj_t* previous_scr) {
+    lv_obj_t* screen = get_settings_edit_screen(setting, previous_scr);
+
+    // Create a text area
+    lv_obj_t* text_area = lv_textarea_create(screen);
+    lv_obj_set_size(text_area, 170, 36);
+    lv_obj_align(text_area, LV_ALIGN_TOP_MID, 0, 45);
+    lv_textarea_set_text(text_area, setting->readCallback().c_str());
+    lv_obj_set_style_text_color(text_area, COLOR_TEXT, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(text_area, COLOR_INPUT_BACKGROUND, LV_PART_MAIN);
+    lv_obj_add_state(text_area, LV_STATE_FOCUSED);
+    lv_obj_set_style_border_width(text_area, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_shadow_width(text_area, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    lv_obj_t* btnm = lv_btnmatrix_create(screen);
+    lv_btnmatrix_set_map(btnm, current_map);
+    lv_obj_align(btnm, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_width(btnm, 220);
+    lv_obj_set_height(btnm, 150);
+    lv_obj_set_style_bg_color(btnm, lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(btnm, COLOR_INPUT_BACKGROUND, LV_PART_ITEMS);
+    lv_obj_set_style_shadow_width(btnm, 0, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(btnm, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(btnm, 0, LV_PART_MAIN);
+    lv_obj_set_style_border_width(btnm, 0, LV_PART_ITEMS);
+    lv_obj_set_style_text_color(btnm, COLOR_TEXT, LV_PART_MAIN | LV_PART_ITEMS);
+    lv_obj_set_style_pad_all(btnm, 0, LV_PART_ITEMS);
+    lv_obj_set_style_pad_gap(btnm, 0, LV_PART_ITEMS);
+
+    lv_btnmatrix_set_btn_ctrl(btnm, 12, LV_BTNMATRIX_CTRL_HIDDEN);
+    lv_btnmatrix_set_btn_ctrl(btnm, 15, LV_BTNMATRIX_CTRL_HIDDEN);
+
+    static int last_btn = -1;
+    static uint32_t last_click_time = 0;
+    static int click_count = 0;
+
+    lv_obj_add_event_cb(btnm, [](lv_event_t* e) {
+        lv_obj_t* obj = lv_event_get_target(e);
+        lv_obj_t* ta = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
+        Setting* setting = static_cast<Setting*>(lv_obj_get_user_data(obj));
+        lv_obj_t* previous_scr = static_cast<lv_obj_t*>(lv_obj_get_user_data(ta));
+        uint32_t id = lv_btnmatrix_get_selected_btn(obj);
+        const char* txt = lv_btnmatrix_get_btn_text(obj, id);
+
+        if (txt == NULL) return;
+
+        if (strcmp(txt, LV_SYMBOL_BACKSPACE) == 0) {
+            lv_textarea_del_char(ta);
+        } else if (strcmp(txt, LV_SYMBOL_OK) == 0) {
+            // Handle OK button: save the current text and exit
+            const char* current_text = lv_textarea_get_text(ta);
+            setting->writeCallback(current_text);
+
+            if (previous_scr) {
+                lv_scr_load_anim(previous_scr, LV_SCR_LOAD_ANIM_OVER_RIGHT, 500, 0, true);
+            }
+        } else if (strcmp(txt, LV_SYMBOL_UP) == 0) {
+            map_index = (map_index + 1) % NUM_MAPS;
+            current_map = all_maps[map_index];
+            lv_btnmatrix_set_map(obj, current_map);
+        } else if (strcmp(txt, "Space") == 0) {
+            lv_textarea_add_char(ta, ' ');
+        } else {
+            uint32_t current_time = lv_tick_get();
+            if (id == last_btn && current_time - last_click_time < 1000) {
+                click_count++;
+                lv_textarea_del_char(ta);
+            } else {
+                click_count = 0;
+            }
+
+            int rowOffset = id / 4;
+            const char* btn_text = current_map[rowOffset + id];
+            char c = btn_text[click_count % strlen(btn_text)];
+            lv_textarea_add_char(ta, c);
+
+            last_btn = id;
+            last_click_time = current_time;
+        }
+    }, LV_EVENT_VALUE_CHANGED, text_area);
+
+    // Set user data for the button matrix and text area
+    lv_obj_set_user_data(btnm, setting);
+    lv_obj_set_user_data(text_area, previous_scr);
+
+    return screen;
+}
+
 // Function to open an edit screen
 void open_edit_screen(Setting* setting) {
     previous_screen = lv_scr_act();
-    ESP_LOGI("SETTINGS_LISt", "%s", setting->title.c_str());
+    ESP_LOGI("SETTINGS_LIST", "%s", setting->title.c_str());
     switch (setting->type) {
         case SettingType::INT:
             edit_screen = create_int_edit_screen(setting, previous_screen);
@@ -247,7 +358,7 @@ void open_edit_screen(Setting* setting) {
             edit_screen = create_bool_edit_screen(setting, previous_screen);
             break;
         case SettingType::STRING:
-            // create_string_edit_screen(screen, setting);
+            edit_screen = create_string_edit_screen(setting, previous_screen);
             break;
         case SettingType::BUTTON:
             edit_screen = create_button_edit_screen(setting, previous_screen);

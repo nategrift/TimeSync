@@ -16,7 +16,8 @@ extern "C" {
 #include "ConfigManager.h"
 #include "TimeEventsManager.h"
 #include "NotificationManager.h"
-
+#include "WifiManager.h"
+#include "WifiDebug.h"
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
 #include "MotionDriver.h"
@@ -78,6 +79,19 @@ void motionTask(void *pvParameters) {
 }
 
 
+// void wifiStatusTask(void *pvParameters) {
+//     while (true) {
+//         if (WifiManager::isConnected()) {
+//             ESP_LOGI(TAG, "WiFi is connected");
+//             ESP_LOGI(TAG, "Signal strength: %d dBm", WifiManager::getSignalStrength());
+//             ESP_LOGI(TAG, "Local IP: %s", WifiManager::getIpAddress().c_str());
+//         } else {
+//             ESP_LOGI(TAG, "WiFi is not connected");
+//         }
+//         vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for 5 seconds
+//     }
+// }
+
 extern "C" void app_main() {
     // Initialize GraphicsDriver
     GraphicsDriver graphicsDriver;
@@ -97,7 +111,6 @@ extern "C" void app_main() {
     // ESP_LOGI(TAG, "Reset button held. Resetting configuration.");
     // fileManager.writeData("ConfigManager", "config.txt", "");
     fileManager.writeData("TimeEvents", "events.csv", ""); 
-
     ConfigManager::init(fileManager, "config.txt");
     TimeManager::init();
 
@@ -111,7 +124,7 @@ extern "C" void app_main() {
     Stopwatch* stopWatchApp = new Stopwatch(appManager);
     Timer* timerApp = new Timer(appManager);
     Settings* settingsApp = new Settings(appManager);
-
+    WifiDebug* wifiDebugApp = new WifiDebug(appManager);
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
@@ -120,6 +133,7 @@ extern "C" void app_main() {
     appManager.registerApp(stopWatchApp);
     appManager.registerApp(timerApp);
     appManager.registerApp(settingsApp);
+    appManager.registerApp(wifiDebugApp);
     appManager.registerApp(appSelector);
 
     appManager.launchApp(clockApp->getAppName());
@@ -152,6 +166,14 @@ extern "C" void app_main() {
     // if (ret != ESP_OK) ESP_LOGI(TAG, "can;t enable petometer");;
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
+
+    if (ConfigManager::getConfigInt("Network", "Enabled")) {
+        WifiManager::turnOn();
+        WifiManager::connect();
+    }
+
+
+    // xTaskCreate(wifiStatusTask, "WiFi Status Task", 4096, NULL, 5, NULL);
 
     // Initialize TimeEventsManager
     TimeEventsManager::init();

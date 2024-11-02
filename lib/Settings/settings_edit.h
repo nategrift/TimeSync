@@ -19,6 +19,7 @@ lv_obj_t* create_time_edit_screen(Setting* setting, lv_obj_t* previous_scr);
 lv_obj_t* create_date_edit_screen(Setting* setting, lv_obj_t* previous_scr);
 lv_obj_t* create_button_edit_screen(Setting* setting, lv_obj_t* previous_scr);
 lv_obj_t* create_bool_edit_screen(Setting* setting, lv_obj_t* previous_scr);
+lv_obj_t* create_string_edit_screen(Setting* setting, lv_obj_t* previous_scr);
 
 void open_edit_screen(Setting* setting);
 

@@ -80,7 +80,7 @@ void Clock::launch() {
 
     // set default time
     // unsafe calling because we already in lvgl loop
-    this->handleTimeUpdate(TimeManager::getTimeInfo());
+    this->handleTimeUpdate(TimeManager::getLocalTimeInfo());
     
 
     // Update the battery level immediately and periodically
