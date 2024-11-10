@@ -9,6 +9,8 @@
 class WifiManager {
 private:
     static bool initialized;
+    static int retry_count;
+    static const int MAX_RETRY = 5;
 public:
     static void init();
     static void deinit();
@@ -21,6 +23,9 @@ public:
     static int getSignalStrength();
     static std::string getIpAddress();
     static bool fetchWorldTime(std::string& errorMsg, time_t& time);
+    static void reset();
+    static bool prepareForSleep();
+    static void resumeFromSleep();
 
 private:
     static void wifiEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);

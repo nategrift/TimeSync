@@ -17,9 +17,11 @@ private:
     lv_obj_t* screenObj;
     lv_obj_t* batteryLabel;
     lv_obj_t* batteryIcon;
+    lv_obj_t* wifiIcon;
     AppManager& appManager;
     BatteryManager& batteryManager;
     lv_timer_t* batteryUpdateTimer;
+    lv_timer_t* wifiUpdateTimer;
     bool isClosing;
 
 public:
@@ -33,6 +35,7 @@ public:
 private:
     void handleTimeUpdate(const struct tm& timeinfo);
     void updateBatteryLevel();
+    void updateWifiIcon();
 };
 
 #endif // CLOCK_H

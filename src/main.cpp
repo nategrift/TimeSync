@@ -18,12 +18,17 @@ extern "C" {
 #include "NotificationManager.h"
 #include "WifiManager.h"
 #include "WifiDebug.h"
+// #include "MotionDebug.h"
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
-#include "MotionDriver.h"
+// #include "MotionDriver.h"
 #include "VibrationDriver.h"
 
 #include <string>
+
+
+#include "lvgl.h"
+#include "nvs_flash.h"
 
 
 #include "AppManager.h"
@@ -35,8 +40,9 @@ extern "C" {
 #include "Timer.h"
 #include "Settings.h"
 #include "AppSelector.h"
-#include "lvgl.h"
+
 // END APPS
+
 // Define GPIO pins for the joystick and button
 #define JOYSTICK_CHANNEL ADC2_CHANNEL_4
 #define BUTTON_PIN GPIO_NUM_16
@@ -55,28 +61,28 @@ extern "C" {
 
 
 
-void motionTask(void *pvParameters) {
-    MotionDriver *motionDriver = static_cast<MotionDriver *>(pvParameters);
+// void motionTask(void *pvParameters) {
+//     // MotionDriver *motionDriver = static_cast<MotionDriver *>(pvParameters);
     
-    uint32_t stepCount = 0;
+//     uint32_t stepCount = 0;
 
-    while (true) {
-        motionDriver->readStepCount(stepCount);
+//     while (true) {
+//         motionDriver->readStepCount(stepCount);
 
-        ESP_LOGI(TAG, "Step Count %d", (int)stepCount);
-        bool isPedometerRunning;
-        esp_err_t ret = motionDriver->isPedometerRunning(isPedometerRunning);
-        if (ret == ESP_OK) {
-            ESP_LOGI(TAG, "Pedometer is %s", isPedometerRunning ? "running" : "stopped");
-        } else {
-            ESP_LOGE(TAG, "Failed to check pedometer status");
-        }
+//         ESP_LOGI(TAG, "Step Count %d", (int)stepCount);
+//         bool isPedometerRunning;
+//         esp_err_t ret = motionDriver->isPedometerRunning(isPedometerRunning);
+//         if (ret == ESP_OK) {
+//             ESP_LOGI(TAG, "Pedometer is %s", isPedometerRunning ? "running" : "stopped");
+//         } else {
+//             ESP_LOGE(TAG, "Failed to check pedometer status");
+//         }
 
 
-        // Wait for 2 seconds
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-}
+//         // Wait for 2 seconds
+//         vTaskDelay(pdMS_TO_TICKS(2000));
+//     }
+// }
 
 
 // void wifiStatusTask(void *pvParameters) {
@@ -106,12 +112,20 @@ extern "C" void app_main() {
     AwakeManager::init();
     VibrationDriver::init();
 
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
     // Initialize the ConfigManager with the path to the configuration file
     static FileManager fileManager;
     // ESP_LOGI(TAG, "Reset button held. Resetting configuration.");
     // fileManager.writeData("ConfigManager", "config.txt", "");
     fileManager.writeData("TimeEvents", "events.csv", ""); 
-    ConfigManager::init(fileManager, "config.txt");
+    ConfigManager::init();
     TimeManager::init();
 
     static InputManager inputManager(touchDriver);
@@ -125,6 +139,7 @@ extern "C" void app_main() {
     Timer* timerApp = new Timer(appManager);
     Settings* settingsApp = new Settings(appManager);
     WifiDebug* wifiDebugApp = new WifiDebug(appManager);
+    // MotionDebug* motionDebugApp = new MotionDebug(appManager);
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
@@ -133,8 +148,10 @@ extern "C" void app_main() {
     appManager.registerApp(stopWatchApp);
     appManager.registerApp(timerApp);
     appManager.registerApp(settingsApp);
-    appManager.registerApp(wifiDebugApp);
     appManager.registerApp(appSelector);
+
+    // appManager.registerApp(wifiDebugApp);
+    // appManager.registerApp(motionDebugApp);
 
     appManager.launchApp(clockApp->getAppName());
 
@@ -157,12 +174,14 @@ extern "C" void app_main() {
 
     xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
 
+    // vTaskDelay(pdMS_TO_TICKS(4000));
     // MotionDriver motionDriver;
+    // vTaskDelay(pdMS_TO_TICKS(150));
     // motionDriver.init();
-    // vTaskDelay(pdMS_TO_TICKS(100));
+    // vTaskDelay(pdMS_TO_TICKS(150));
     // motionDriver.enableGyroAndAcc();
     // vTaskDelay(pdMS_TO_TICKS(100));
-    // esp_err_t ret = motionDriver.enablePedometer();
+    // ret = motionDriver.enablePedometer();
     // if (ret != ESP_OK) ESP_LOGI(TAG, "can;t enable petometer");;
 
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);

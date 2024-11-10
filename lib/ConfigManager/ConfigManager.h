@@ -3,17 +3,16 @@
 
 #include <string>
 #include <map>
-#include "FileManager.h"
+#include "nvs_handle.hpp"
 
 class ConfigManager {
 private:
     static std::map<std::string, std::map<std::string, std::string>> configMap;
     static std::map<std::string, std::map<std::string, std::string>> defaultConfigMap;
-    static std::string configFileName;
-    static FileManager* fileManager;
+    static nvs_handle_t nvsHandle;
 
 public:
-    static void init(FileManager& fm, const std::string& filename);
+    static void init();
 
     static std::string getConfigString(const std::string& group, const std::string& key);
     static int getConfigInt(const std::string& group, const std::string& key);

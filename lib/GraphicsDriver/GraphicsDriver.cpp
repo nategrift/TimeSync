@@ -5,6 +5,7 @@
 #include "AwakeManager.h"
 #include "ConfigManager.h"
 #include "driver/ledc.h" 
+#include "esp_task_wdt.h" 
 
 #define min_task_delay 3
 
@@ -22,6 +23,12 @@ void GraphicsDriver::init() {
 
     // // Create LVGL task
     xTaskCreate(lvgl_task, "Rendering Task", 128000, NULL, 5, NULL);
+    esp_task_wdt_config_t twdt_config = {
+        .timeout_ms = 5000,                // 5 second timeout
+        .idle_core_mask = (1 << 0),        // Watch core 0
+        .trigger_panic = true
+    };
+    ESP_ERROR_CHECK(esp_task_wdt_reconfigure(&twdt_config));
 }
 
 void GraphicsDriver::lvgl_task(void *arg) {

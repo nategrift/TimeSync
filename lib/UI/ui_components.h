@@ -11,6 +11,12 @@
 
 #define COLOR_INPUT_BACKGROUND lv_color_hex(0x181414)
 
+
+
+#define COLOR_ERROR lv_color_hex(0x873535)
+#define COLOR_WARNING lv_color_hex(0xab812c)
+#define COLOR_SUCCESS lv_color_hex(0x398735)
+
 lv_obj_t* get_default_roller(lv_obj_t* parent);
 int find_roller_selected_index(const char* options, const char* selected);
 

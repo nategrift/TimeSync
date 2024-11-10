@@ -1,13 +1,13 @@
 #include "WifiManager.h"
 #include "esp_log.h"
 #include "esp_http_client.h"
-#include "nvs_flash.h"
 #include <cstring>
 #include <algorithm>
 
 static const char* TAG = "WifiManager";
 
 bool WifiManager::initialized = false;
+int WifiManager::retry_count = 0;
 
 void WifiManager::init() {
     if (initialized) {
@@ -16,14 +16,6 @@ void WifiManager::init() {
     }
     
     ESP_LOGI(TAG, "Initializing WiFi");
-    
-    // Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
 
     initialized = true;
 }
@@ -33,20 +25,40 @@ bool WifiManager::turnOn() {
         init();  // Initialize when actually needed
     }
 
+    WifiManager::retry_count = 0;
+
     ESP_LOGI(TAG, "Turning WiFi on");
     
     // Move WiFi initialization here
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_err_t ret = esp_netif_init();
+    if (ret != ESP_OK) {
+        return false;
+    }
+
+    ret = esp_event_loop_create_default();
+    if (ret != ESP_OK) {
+        return false;
+    }
+
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ret = esp_wifi_init(&cfg);
+    if (ret != ESP_OK) {
+        return false;
+    }
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifiEventHandler, NULL, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifiEventHandler, NULL, NULL));
+    ret = esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifiEventHandler, NULL, NULL);
+    if (ret != ESP_OK) {
+        return false;
+    }
+
+    ret = esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifiEventHandler, NULL, NULL);
+    if (ret != ESP_OK) {
+        return false;
+    }
     
-    esp_err_t ret = esp_wifi_start();
+    ret = esp_wifi_start();
     return (ret == ESP_OK);
 }
 
@@ -61,19 +73,31 @@ bool WifiManager::turnOff() {
     // Stop WiFi
     esp_err_t ret = esp_wifi_stop();
     if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to stop WiFi: %s", esp_err_to_name(ret));
         return false;
     }
+    
+    // Unregister event handlers
+    esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, NULL);
+    esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, NULL);
     
     // Deinitialize WiFi
     ret = esp_wifi_deinit();
     if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to deinit WiFi: %s", esp_err_to_name(ret));
         return false;
     }
     
     // Delete default event loop
     ret = esp_event_loop_delete_default();
     if (ret != ESP_OK) {
-        return false;
+        ESP_LOGE(TAG, "Failed to delete event loop: %s", esp_err_to_name(ret));
+    }
+    
+    // Clean up the default netif
+    esp_netif_t* netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (netif != NULL) {
+        esp_netif_destroy(netif);
     }
     
     // Deinitialize TCP/IP adapter
@@ -94,9 +118,6 @@ void WifiManager::deinit() {
     if (isOn()) {
         turnOff();
     }
-    
-    // Clean up NVS
-    nvs_flash_deinit();
     
     initialized = false;
 }
@@ -121,14 +142,25 @@ bool WifiManager::connect() {
         return false;
     }
 
+    // Add retry configuration
     wifi_config_t wifi_config = {};
     std::memcpy(wifi_config.sta.ssid, ssid.c_str(), std::min<size_t>(ssid.length(), sizeof(wifi_config.sta.ssid)));
     std::memcpy(wifi_config.sta.password, password.c_str(), std::min<size_t>(password.length(), sizeof(wifi_config.sta.password)));
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config.sta.pmf_cfg.capable = true;
+    wifi_config.sta.pmf_cfg.required = false;
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    esp_err_t ret = esp_wifi_connect();
+    esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (ret != ESP_OK) {
+        return false;
+    }
 
+    ret = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    if (ret != ESP_OK) {
+        return false;
+    }
+
+    ret = esp_wifi_connect();
     return (ret == ESP_OK);
 }
 
@@ -165,13 +197,35 @@ std::string WifiManager::getIpAddress() {
 void WifiManager::wifiEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
+        retry_count = 0;
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(TAG, "WiFi disconnected. Attempting to reconnect...");
-        esp_wifi_connect();
+        // Don't block in the event handler
+        xTaskCreate([](void* pvParameters) {
+            WifiManager* self = (WifiManager*)pvParameters;
+            if (retry_count < MAX_RETRY) {
+                ESP_LOGI(TAG, "WiFi disconnected. Attempting to reconnect... (Attempt %d/%d)", 
+                         retry_count + 1, MAX_RETRY);
+                esp_wifi_connect();
+                retry_count++;
+            } else {
+                ESP_LOGE(TAG, "WiFi connection failed after %d attempts", MAX_RETRY);
+                // Optionally reset the WiFi
+                self->reset();
+            }
+            vTaskDelete(NULL);
+        }, "wifi_reconnect", 4096, nullptr, 5, nullptr);
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "Got IP address: " IPSTR, IP2STR(&event->ip_info.ip));
+        retry_count = 0;  // Reset retry counter on successful connection
     }
+}
+
+void WifiManager::reset() {
+    esp_wifi_stop();
+    vTaskDelay(pdMS_TO_TICKS(1000));  // Give some time for cleanup
+    esp_wifi_start();
+    WifiManager::retry_count = 0;
 }
 
 esp_err_t WifiManager::httpGet(const char* url, std::string& response) {
@@ -263,6 +317,35 @@ bool WifiManager::fetchWorldTime(std::string& errorMsg, time_t& time) {
     } else {
         errorMsg = "Error fetching world time: " + std::to_string(err) + " " + response;
         return false;
+    }
+}
+
+bool WifiManager::prepareForSleep() {
+    ESP_LOGI(TAG, "Preparing WiFi for sleep mode");
+    
+    // If WiFi is connected, disconnect first
+    if (isConnected()) {
+        disconnect();
+    }
+    
+    // If WiFi is on, turn it off
+    if (isOn()) {
+        if (!turnOff()) {
+            ESP_LOGE(TAG, "Failed to turn off WiFi before sleep");
+            return false;
+        }
+    }
+    
+    WifiManager::retry_count = 0;  // Reset retry counter
+    return true;
+}
+
+void WifiManager::resumeFromSleep() {
+    ESP_LOGI(TAG, "Resuming WiFi from sleep mode");
+    
+    if (ConfigManager::getConfigInt("Network", "Enabled")) {
+        WifiManager::turnOn();
+        WifiManager::connect();
     }
 }
 

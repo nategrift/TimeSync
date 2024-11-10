@@ -6,7 +6,7 @@
 #include "ConfigManager.h"
 #include "TimeManager.h"
 #include "TimeEventsManager.h"
-
+#include "WifiManager.h"
 extern "C" {
 #include "gc9a01.h"
 #include "display.h"
@@ -68,6 +68,7 @@ void AwakeManager::sleepDevice() {
 
     // Turn off the screen
     GraphicsDriver::turn_off_screen();
+    WifiManager::prepareForSleep();
 
     // Wait till all the SPI communications have been sent, then sleep
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -99,6 +100,9 @@ void AwakeManager::sleepDevice() {
 }
 
 void AwakeManager::wakeDevice(int before_sleep_time) {
+
+    WifiManager::resumeFromSleep();
+
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();
     resume_lvgl_tick_timer();

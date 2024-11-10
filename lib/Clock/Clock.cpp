@@ -4,11 +4,12 @@
 
 #include "esp_log.h"
 #include "app_screen.h"
-
+#include "ui_components.h"
+#include "WifiManager.h"
 static const char* TAG = "Clock";
 
 Clock::Clock(AppManager& manager)
-    : IApp("Clock"), // Initialize the app name
+    : IApp("Clock"),
       timeListenerId(-1),
       clockTimeLabel(NULL),
       screenObj(NULL),
@@ -67,11 +68,17 @@ void Clock::launch() {
     batteryLabel = lv_label_create(screenObj);
     lv_label_set_text(batteryLabel, "--%"); // Initial battery percentage
     lv_obj_add_style(batteryLabel, &style_battery, 0);
-    lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
+    lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 25, -15);
 
     batteryIcon =  lv_label_create(screenObj);
     lv_obj_add_style(batteryIcon, &style_battery, 0);
-    lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -20, -10);
+    lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -5, -15);
+
+    wifiIcon = lv_label_create(screenObj);
+    lv_obj_add_style(wifiIcon, &style_battery, 0);
+    lv_obj_align(wifiIcon, LV_ALIGN_BOTTOM_MID, -30, -15);
+    lv_label_set_text(wifiIcon, LV_SYMBOL_WIFI);
+    lv_obj_set_style_text_color(wifiIcon, COLOR_TEXT, LV_PART_MAIN);
 
     // Set up the time update listener
     timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
@@ -85,9 +92,11 @@ void Clock::launch() {
 
     // Update the battery level immediately and periodically
     updateBatteryLevel();
+    updateWifiIcon();
     batteryUpdateTimer = lv_timer_create([](lv_timer_t* timer) {
         Clock* clock = static_cast<Clock*>(timer->user_data);
         clock->updateBatteryLevel();
+        clock->updateWifiIcon();
     }, 4000, this);
 }
 
@@ -148,7 +157,7 @@ void Clock::updateBatteryLevel() {
 
     if (batteryLabel && lv_obj_is_valid(batteryLabel)) {
         lv_label_set_text(batteryLabel, battery_text);
-        lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
+        // lv_obj_align(batteryLabel, LV_ALIGN_BOTTOM_MID, 10, -10);
     }
 
     if (batteryIcon) {
@@ -167,7 +176,29 @@ void Clock::updateBatteryLevel() {
             icon = LV_SYMBOL_USB;
         }
         lv_label_set_text(batteryIcon, icon);
-        lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -20, -10);
+        // lv_obj_align(batteryIcon, LV_ALIGN_BOTTOM_MID, -20, -10);
+    }
+}
+
+void Clock::updateWifiIcon() {
+    if (wifiIcon && lv_obj_is_valid(wifiIcon)) {
+        bool isConnected = WifiManager::isConnected();
+        bool isOn = WifiManager::isOn();
+        lv_color_t color = COLOR_TEXT;
+        if (!isOn) {
+            color = COLOR_MUTED_TEXT;
+        } else if (isOn && !isConnected) {
+            color = COLOR_ERROR;
+        } else {
+            int status = WifiManager::getSignalStrength();
+            if (status > -75) {
+                color = COLOR_SUCCESS;
+            } else {
+                color = COLOR_WARNING;
+            }
+        }
+
+        lv_obj_set_style_text_color(wifiIcon, color, LV_PART_MAIN);
     }
 }
 
