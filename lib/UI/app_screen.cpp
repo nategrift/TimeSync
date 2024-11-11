@@ -62,6 +62,7 @@ void gesture_action(AppManager *appManager, lv_dir_t gesture)
     {
     case LV_DIR_TOP:
         ESP_LOGI(TAG, "SwipeUp");
+        appManager->launchApp("MotionDebug");
         break;
     case LV_DIR_BOTTOM:
         ESP_LOGI(TAG, "SwipeDown");

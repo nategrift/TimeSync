@@ -18,10 +18,10 @@ extern "C" {
 #include "NotificationManager.h"
 #include "WifiManager.h"
 #include "WifiDebug.h"
-// #include "MotionDebug.h"
+#include "MotionDebug.h"
+#include "MotionDriver.h"
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
-// #include "MotionDriver.h"
 #include "VibrationDriver.h"
 
 #include <string>
@@ -139,7 +139,7 @@ extern "C" void app_main() {
     Timer* timerApp = new Timer(appManager);
     Settings* settingsApp = new Settings(appManager);
     WifiDebug* wifiDebugApp = new WifiDebug(appManager);
-    // MotionDebug* motionDebugApp = new MotionDebug(appManager);
+    MotionDebug* motionDebugApp = new MotionDebug(appManager);
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
@@ -150,10 +150,10 @@ extern "C" void app_main() {
     appManager.registerApp(settingsApp);
     appManager.registerApp(appSelector);
 
-    // appManager.registerApp(wifiDebugApp);
-    // appManager.registerApp(motionDebugApp);
+    appManager.registerApp(wifiDebugApp);
+    appManager.registerApp(motionDebugApp);
 
-    appManager.launchApp(clockApp->getAppName());
+    appManager.launchApp(motionDebugApp->getAppName());
 
     // Create tasks for time management
     xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL, 0);
@@ -174,22 +174,20 @@ extern "C" void app_main() {
 
     xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
 
-    // vTaskDelay(pdMS_TO_TICKS(4000));
-    // MotionDriver motionDriver;
-    // vTaskDelay(pdMS_TO_TICKS(150));
-    // motionDriver.init();
-    // vTaskDelay(pdMS_TO_TICKS(150));
-    // motionDriver.enableGyroAndAcc();
-    // vTaskDelay(pdMS_TO_TICKS(100));
-    // ret = motionDriver.enablePedometer();
-    // if (ret != ESP_OK) ESP_LOGI(TAG, "can;t enable petometer");;
-
     // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
 
     if (ConfigManager::getConfigInt("Network", "Enabled")) {
         WifiManager::turnOn();
         WifiManager::connect();
     }
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+    MotionDriver::init();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    MotionDriver::enableGyroAndAcc();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    ret = MotionDriver::enablePedometer();
+    if (ret != ESP_OK) ESP_LOGE("MotionDebug", "can;t enable petometer");
 
 
     // xTaskCreate(wifiStatusTask, "WiFi Status Task", 4096, NULL, 5, NULL);

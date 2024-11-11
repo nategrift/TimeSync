@@ -9,7 +9,7 @@ static const char *TAG = "ConfigManager";
 // Static member initialization
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::configMap;
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::defaultConfigMap = {
-    {"General", {{"ScreenTimeout", "30"}, {"Time", "02:15:30"}, {"Date", "2024-08-01"}, {"Brightness", "10"}, {"Volume", "5"}, {"Mute", "1"}, {"Name", "TimeSync"}}},
+    {"General", {{"ScreenTimeout", "30"}, {"Time", "02:15:30"}, {"Date", "2024-08-01"}, {"Brightness", "10"}, {"PedometerLevel", "1"}, {"Volume", "5"}, {"Mute", "1"}, {"Name", "TimeSync"}}},
     {"Network", {{"Enabled", "0"}, {"SSID", ""}, {"Password", ""}}}
 };
 nvs_handle_t ConfigManager::nvsHandle;

@@ -11,6 +11,7 @@
 #include "esp_system.h"
 #include "WifiManager.h"
 #include "NotificationManager.h"
+#include "MotionDriver.h"
 
 
 static const char *TAG = "Settings";
@@ -143,6 +144,28 @@ Settings::Settings(AppManager &manager)
              return ConfigManager::getConfigString("General", "Brightness");
          },
          SettingType::INT, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"},
+        // PedometerLevel
+        {"PedometerLevel",
+         []() -> std::string
+         {
+             return ConfigManager::getConfigString("General", "PedometerLevel");
+         },
+         [](const std::string &value)
+         {
+            int level = std::stoi(value);
+            ConfigManager::setConfigInt("General", "PedometerLevel", level);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            MotionDriver::init();
+            vTaskDelay(pdMS_TO_TICKS(100));
+            MotionDriver::enableGyroAndAcc();
+            vTaskDelay(pdMS_TO_TICKS(100));
+            MotionDriver::enablePedometer();
+         },
+         []() -> std::string
+         {
+             return ConfigManager::getConfigString("General", "PedometerLevel");
+         },
+         SettingType::INT, "1\n2\n3\n4\n5"},
 
         {"Volume",
          []() -> std::string

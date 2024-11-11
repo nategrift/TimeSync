@@ -1,5 +1,12 @@
 #include "MotionDriver.h"
 #include "esp_log.h"
+#include "driver/i2c.h"
+#include "driver/gpio.h"
+#include "ConfigManager.h"
+
+#define I2C_SCL GPIO_NUM_7
+#define I2C_SDA GPIO_NUM_6
+#define I2C_NUM I2C_NUM_0
 
 static const char *TAG = "MotionDriver";
 
@@ -9,6 +16,27 @@ MotionDriver::~MotionDriver() {}
 
 esp_err_t MotionDriver::init() {
     esp_err_t ret;
+
+    // Verify chip ID
+    uint8_t chip_id;
+    ret = readRegister(0x00, &chip_id, 1);  // 0x00 is WHO_AM_I register
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to read chip ID");
+        return ret;
+    }
+    if (chip_id != 0x05) {
+        ESP_LOGE(TAG, "Wrong chip ID: 0x%02x", chip_id);
+        return ESP_ERR_INVALID_VERSION;
+    }
+
+    // Reset the device
+    uint8_t reset_cmd = 0xB0;
+    ret = writeRegister(0x60, &reset_cmd, 1);  // 0x60 is RESET register
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to reset device");
+        return ret;
+    }
+    vTaskDelay(pdMS_TO_TICKS(50));
 
     uint8_t disableSensors = 0b00000000; 
     ret = writeRegister(0x08, &disableSensors, 1);
@@ -23,14 +51,14 @@ esp_err_t MotionDriver::init() {
         return ret;
     }
 
-    uint8_t accelConfig = 0b00100110;  // CTRL2: aFS = 010 (±8g), aODR = 0110 (125 Hz)
+    uint8_t accelConfig = 0b00010111;  // CTRL2: test = 0,aFS = 001 (±4g), aODR = 0110 (125 Hz)
     ret = writeRegister(0x03, &accelConfig, 1);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to configure accelerometer");
         return ret;
     }
 
-    uint8_t gyroConfig = 0b10000101;  // CTRL3: gFS = 100 (±256 dps), gODR = 0101 (224.2 Hz)
+    uint8_t gyroConfig = 0b00100110;  // CTRL3: test = 0, 010 - ±64 dps, gODR = 0110 = 112.1 ODR Rate (Hz)
     ret = writeRegister(0x04, &gyroConfig, 1);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to configure gyroscope");
@@ -55,15 +83,29 @@ esp_err_t MotionDriver::enableGyroAndAcc() {
 }
 
 esp_err_t MotionDriver::readGyroscope(float &x, float &y, float &z) {
-    uint8_t data[6];
-    esp_err_t ret = readRegister(0x3B, data, 6); // 0x3B is the starting register address for gyroscope data
+    uint8_t x_low;
+    uint8_t x_high;
+    esp_err_t ret = readRegister(0x3B, &x_low, 1);
+    ret = readRegister(0x3C, &x_high, 1);
+
+    uint8_t y_low;
+    uint8_t y_high;
+    ret = readRegister(0x3D, &y_low, 1);
+    ret = readRegister(0x3E, &y_high, 1);
+
+    uint8_t z_high;
+    uint8_t z_low;
+    ret = readRegister(0x3F, &z_low, 1);
+    ret = readRegister(0x40, &z_high, 1);
+    
+    float scale_factor = 64.0f / 32768.0f;
     if (ret == ESP_OK) {
-        int16_t raw_x = (data[1] << 8) | data[0];
-        int16_t raw_y = (data[3] << 8) | data[2];
-        int16_t raw_z = (data[5] << 8) | data[4];
-        x = raw_x * (256.0f / 32768.0f); // Convert to degrees per second
-        y = raw_y * (256.0f / 32768.0f);
-        z = raw_z * (256.0f / 32768.0f);
+        int16_t raw_x = (x_high << 8) | x_low;
+        int16_t raw_y = (y_high << 8) | y_low;
+        int16_t raw_z = (z_high << 8) | z_low;
+        x = (float)raw_x * scale_factor;
+        y = (float)raw_y * scale_factor;
+        z = (float)raw_z * scale_factor;
     } else {
         ESP_LOGE(TAG, "Failed to read gyroscope data");
     }
@@ -71,81 +113,133 @@ esp_err_t MotionDriver::readGyroscope(float &x, float &y, float &z) {
 }
 
 esp_err_t MotionDriver::readAccelerometer(float &x, float &y, float &z) {
-    uint8_t data[6];
-    esp_err_t ret = readRegister(0x35, data, 6); // 0x35 is the starting register address for accelerometer data
+    uint8_t x_low;
+    uint8_t x_high;
+    esp_err_t ret = readRegister(0x35, &x_low, 1);
+    ret = readRegister(0x36, &x_high, 1);
+
+    uint8_t y_low;
+    uint8_t y_high;
+    ret = readRegister(0x37, &y_low, 1);
+    ret = readRegister(0x38, &y_high, 1);
+
+    uint8_t z_high;
+    uint8_t z_low;
+    ret = readRegister(0x39, &z_low, 1);
+    ret = readRegister(0x3A, &z_high, 1);
+    
+    float scale_factor = 4.0f / 32768.0f;
     if (ret == ESP_OK) {
-        int16_t raw_x = (data[1] << 8) | data[0];
-        int16_t raw_y = (data[3] << 8) | data[2];
-        int16_t raw_z = (data[5] << 8) | data[4];
-        x = raw_x * (8.0f / 32768.0f); // Convert to g (gravitational acceleration)
-        y = raw_y * (8.0f / 32768.0f);
-        z = raw_z * (8.0f / 32768.0f);
+        int16_t raw_x = (x_high << 8) | x_low;
+        int16_t raw_y = (y_high << 8) | y_low;
+        int16_t raw_z = (z_high << 8) | z_low;
+        x = (float)raw_x * scale_factor;
+        y = (float)raw_y * scale_factor;
+        z = (float)raw_z * scale_factor;
     } else {
-        ESP_LOGE(TAG, "Failed to read accelerometer data");
+        ESP_LOGE(TAG, "Failed to read gyroscope data");
     }
     return ret;
 }
 
 
+// REGISTERS    
+// CAL1_L 11 -> 0B
+// CAL1_H 12 -> 0C
+// CAL2_L 13 -> 0D
+// CAL2_H 14 -> 0E
+// CAL3_L 15 -> 0F
+// CAL3_H 16 -> 10
+// CAL4_L 17 -> 11
+// CAL4_H 18 -> 12
 esp_err_t MotionDriver::configurePedometer() {
-    esp_err_t ret;
-    uint8_t data[2];
+    uint16_t pedSampleCnt = 50; // sample
+    uint16_t pedFixPeak2peak = 200; //mg
+    uint16_t pedFixPeak = 100; //mg
+    uint16_t pedTimeUp = 100; // samples
+    uint8_t pedTimeLow = 12; // samples
+    uint8_t pedCntEntry = 4; // samples
+    uint8_t pedFixPrecision = 0; //mg
+    uint8_t pedSigCount = 4; //mg
 
-    // Step 1: Configure pedometer parameters (First CTRL9 Command)
-    // ped_sample_cnt = 50 samples (0x0032) for 1 second window @ ODR = 50Hz
-    data[0] = 0x32;  // ped_sample_cnt[7:0] = 50 samples
-    data[1] = 0x00;  // ped_sample_cnt[15:8]
-    ret = writeRegister(0x0A, data, 2);  // Write to CAL1_L and CAL1_H
-    if (ret != ESP_OK) return ret;
+    int level = ConfigManager::getConfigInt("General", "PedometerLevel");
+    if (level == 1) {
+        pedFixPeak2peak = 200; // higher for more strict threshold
+        pedFixPeak = 100; // higher for more strict threshold
+        pedTimeUp = 150; // lower for more strict threshold
+        pedTimeLow = 12; // higher for more strict threshold
+    } else if (level == 2) {
+        pedFixPeak2peak = 250; 
+        pedFixPeak = 125; 
+        pedTimeUp = 125;
+        pedTimeLow = 16; 
+    } else if (level == 3) {
+        pedFixPeak2peak = 300; 
+        pedFixPeak = 150; 
+        pedTimeUp = 100;
+        pedTimeLow = 20; 
+    } else if (level == 4) {
+        pedFixPeak2peak = 350; 
+        pedFixPeak = 175; 
+        pedTimeUp = 80;
+        pedTimeLow = 24; 
+    }  else if (level == 5) {
+        pedFixPeak2peak = 400; 
+        pedFixPeak = 200; 
+        pedTimeUp = 60;
+        pedTimeLow = 28; 
+    }
 
-    // ped_fix_peak2peak = 200mg (0x00CC in u6.10 format)
-    data[0] = 0xCC;  // ped_fix_peak2peak[7:0] = 200mg
-    data[1] = 0x00;  // ped_fix_peak2peak[15:8]
-    ret = writeRegister(0x0C, data, 2);  // Write to CAL2_L and CAL2_H
-    if (ret != ESP_OK) return ret;
+    // First set of pedometer parameters
+    uint8_t cal4H_1 = 0x01;  // Mentioned we are writing first params
+    writeRegister(0x12, &cal4H_1, 1);  // CAL4_H
 
-    // ped_fix_peak = 100mg (0x0066 in u6.10 format)
-    data[0] = 0x66;  // ped_fix_peak[7:0] = 100mg
-    data[1] = 0x00;  // ped_fix_peak[15:8]
-    ret = writeRegister(0x0E, data, 2);  // Write to CAL3_L and CAL3_H
-    if (ret != ESP_OK) return ret;
+    // CAL1 register (0x0B, 0x0C)
+    uint8_t pedSampleCnt_L = pedSampleCnt & 0xFF;
+    uint8_t pedSampleCnt_H = (pedSampleCnt >> 8) & 0xFF;
+    writeRegister(0x0B, &pedSampleCnt_L, 1);  // CAL1_L
+    writeRegister(0x0C, &pedSampleCnt_H, 1);  // CAL1_H
 
-    // First command to configure pedometer
-    data[0] = 0x01;  // First CTRL9 command
-    ret = writeRegister(0x10, data, 1);  // Write to CAL4_H
-    if (ret != ESP_OK) return ret;
+    // CAL2 register (0x0D, 0x0E)
+    uint8_t pedFixPeak2Peak_L = pedFixPeak2peak & 0xFF;
+    uint8_t pedFixPeak2Peak_H = (pedFixPeak2peak >> 8) & 0xFF;
+    writeRegister(0x0D, &pedFixPeak2Peak_L, 1);  // CAL2_L
+    writeRegister(0x0E, &pedFixPeak2Peak_H, 1);  // CAL2_H
 
-    // Send configuration command to CTRL9
-    data[0] = 0x0D;  // CTRL_CMD_CONFIGURE_PEDOMETER
-    ret = writeRegister(0x11, data, 1);  // Write to CTRL9
-    if (ret != ESP_OK) return ret;
+    // CAL3 register (0x0F, 0x10)
+    uint8_t pedFixPeak_L = pedFixPeak & 0xFF;
+    uint8_t pedFixPeak_H = (pedFixPeak >> 8) & 0xFF;
+    writeRegister(0x0F, &pedFixPeak_L, 1);  // CAL3_L
+    writeRegister(0x10, &pedFixPeak_H, 1);  // CAL3_H
 
-    // Step 2: Configure step timing parameters (Second CTRL9 Command)
-    // ped_time_up = 200 samples (0x00C8, 4s at 50Hz)
-    data[0] = 0xC8;  // ped_time_up[7:0] = 200 samples
-    data[1] = 0x00;  // ped_time_up[15:8]
-    ret = writeRegister(0x0A, data, 2);  // Write to CAL1_L and CAL1_H
-    if (ret != ESP_OK) return ret;
+    // Trigger first configuration CTRL_9 Function calling
+    uint8_t configCommand1 = 0x0D;
+    writeRegister(0x0A, &configCommand1, 1);
 
-    // ped_time_low = 20 samples (0x14, 0.4s at 50Hz)
-    data[0] = 0x14;  // ped_time_low
-    ret = writeRegister(0x0C, data, 1);  // Write to CAL2_L
-    if (ret != ESP_OK) return ret;
+    vTaskDelay(pdMS_TO_TICKS(500));
 
-    // ped_time_cnt_entry = 2 steps (0x02)
-    data[0] = 0x02;  // ped_time_cnt_entry
-    ret = writeRegister(0x0D, data, 1);  // Write to CAL2_H
-    if (ret != ESP_OK) return ret;
+    // Second set of pedometer parameters
+    // CAL4 register (0x11, 0x12)
+    uint8_t cal4H_2 = 0x02;  // Second command
+    writeRegister(0x12, &cal4H_2, 1);  // CAL4_H
 
-    // Second command to finalize pedometer configuration
-    data[0] = 0x02;  // Second CTRL9 command
-    ret = writeRegister(0x10, data, 1);  // Write to CAL4_H
-    if (ret != ESP_OK) return ret;
+    // CAL1 register (0x0B, 0x0C)
+    uint8_t pedTimeUp_L = pedTimeUp & 0xFF;
+    uint8_t pedTimeUp_H = (pedTimeUp >> 8) & 0xFF;
+    writeRegister(0x0B, &pedTimeUp_L, 1);
+    writeRegister(0x0C, &pedTimeUp_H, 1);
 
-    // Send the second configuration command to CTRL9
-    data[0] = 0x0D;  // CTRL_CMD_CONFIGURE_PEDOMETER
-    ret = writeRegister(0x11, data, 1);  // Write to CTRL9
-    if (ret != ESP_OK) return ret;
+    // CAL2 register (0x0D, 0x0E)
+    writeRegister(0x0D, &pedTimeLow, 1);
+    writeRegister(0x0E, &pedCntEntry, 1);
+
+    // CAL3 register (0x0F, 0x10)
+    writeRegister(0x0F, &pedFixPrecision, 1);
+    writeRegister(0x10, &pedSigCount, 1);
+
+    // Trigger second configuration
+    uint8_t configCommand2 = 0x0D;
+    writeRegister(0x0A, &configCommand2, 1);
 
     return ESP_OK;
 }
@@ -154,7 +248,7 @@ esp_err_t MotionDriver::enablePedometer() {
     // Sleep for 20ms to allow the pedometer configuration to settle
     vTaskDelay(pdMS_TO_TICKS(20));
 
-    uint8_t data = 0x10;  // Enable pedometer (CTRL8.bit4 = 1)
+    uint8_t data = 0b00010000;  // Enable pedometer (CTRL8.bit4 = 1)
     return writeRegister(0x09, &data, 1);  // Write to CTRL8 to enable pedometer
 }
 
@@ -162,7 +256,8 @@ esp_err_t MotionDriver::isPedometerRunning(bool &isRunning) {
     uint8_t data;
     esp_err_t ret = readRegister(0x09, &data, 1);  // Read CTRL8 register
     if (ret == ESP_OK) {
-        isRunning = (data & 0x10) ? true : false;  // Check if Pedo_EN (bit 4) is set
+        uint8_t enabledPedometer = 0b00010000;  // Enable pedometer (CTRL8.bit4 = 1)
+        isRunning = (data & enabledPedometer) ? true : false;  // Check if Pedo_EN (bit 4) is set
         ESP_LOGI(TAG, "Pedometer is %s", isRunning ? "running" : "stopped");
     } else {
         ESP_LOGE(TAG, "Failed to read pedometer status");
@@ -171,12 +266,16 @@ esp_err_t MotionDriver::isPedometerRunning(bool &isRunning) {
 }
 
 esp_err_t MotionDriver::readStepCount(uint32_t &stepCount) {
-    uint8_t data[3];  // Buffer to store the 3 bytes
-    esp_err_t ret = readRegister(0x5A, data, 3);  // Read STEP_CNT_LOW, MIDL, and HIGH
+    uint8_t low;
+    uint8_t mid;
+    uint8_t high;
+    esp_err_t ret = readRegister(0x5A, &low, 1); 
+    ret = readRegister(0x5B, &mid, 1); 
+    ret = readRegister(0x5C, &high, 1); 
 
     if (ret == ESP_OK) {
-        stepCount = (data[2] << 16) | (data[1] << 8) | data[0];  // Combine the bytes into a 24-bit value
-        ESP_LOGI(TAG, "Step Count: %d", (int)stepCount);
+        stepCount = (high << 16) | (mid << 8) | low;  
+        ESP_LOGI(TAG, "Step Count: %lu", stepCount);
     } else {
         ESP_LOGE(TAG, "Failed to read step count");
     }
@@ -185,7 +284,7 @@ esp_err_t MotionDriver::readStepCount(uint32_t &stepCount) {
 
 esp_err_t MotionDriver::resetStepCount() {
     uint8_t data = 0x0F;  // CTRL_CMD_RESET_PEDOMETER
-    return writeRegister(0x11, &data, 1);  // Write to CTRL9 to reset the step count
+    return writeRegister(0x0A, &data, 1);  // Write to CTRL9 to reset the step count
 }
 
 
@@ -196,7 +295,10 @@ esp_err_t MotionDriver::readRegister(uint8_t reg, uint8_t *data, size_t len) {
     i2c_master_write_byte(cmd, reg, true);
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (QMI8658_I2C_ADDR << 1) | I2C_MASTER_READ, true);
-    i2c_master_read(cmd, data, len, I2C_MASTER_LAST_NACK);
+    if (len > 1) {
+        i2c_master_read(cmd, data, len - 1, I2C_MASTER_ACK);  // Read all but last byte with ACK
+    }
+    i2c_master_read(cmd, data + len - 1, 1, I2C_MASTER_NACK); // Read last byte with NACK
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(I2C_PORT, cmd, 1000 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
