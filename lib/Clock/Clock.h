@@ -18,6 +18,7 @@ private:
     lv_obj_t* batteryLabel;
     lv_obj_t* batteryIcon;
     lv_obj_t* wifiIcon;
+    lv_obj_t* stepsLabel;
     AppManager& appManager;
     BatteryManager& batteryManager;
     lv_timer_t* batteryUpdateTimer;
@@ -36,6 +37,7 @@ private:
     void handleTimeUpdate(const struct tm& timeinfo);
     void updateBatteryLevel();
     void updateWifiIcon();
+    void updateSteps();
 };
 
 #endif // CLOCK_H

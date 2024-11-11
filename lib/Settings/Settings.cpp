@@ -201,6 +201,15 @@ Settings::Settings(AppManager &manager)
          },
          SettingType::BOOL, nullptr},
 
+        {"Reset Steps Logs",
+         []() -> std::string
+         { return ""; },
+         [](const std::string &value)
+         { FileManager::writeData("fitness", "hourly_steps.txt", ""); },
+         []() -> std::string
+         { return ""; },
+         SettingType::BUTTON, nullptr},
+
         {"Restart Device",
          []() -> std::string
          { return ""; },

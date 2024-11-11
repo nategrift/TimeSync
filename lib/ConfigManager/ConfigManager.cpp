@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "FitnessManager.h"
 
 static const char *TAG = "ConfigManager";
 
@@ -10,7 +11,8 @@ static const char *TAG = "ConfigManager";
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::configMap;
 std::map<std::string, std::map<std::string, std::string>> ConfigManager::defaultConfigMap = {
     {"General", {{"ScreenTimeout", "30"}, {"Time", "02:15:30"}, {"Date", "2024-08-01"}, {"Brightness", "10"}, {"PedometerLevel", "1"}, {"Volume", "5"}, {"Mute", "1"}, {"Name", "TimeSync"}}},
-    {"Network", {{"Enabled", "0"}, {"SSID", ""}, {"Password", ""}}}
+    {"Network", {{"Enabled", "0"}, {"SSID", ""}, {"Password", ""}}},
+    {FitnessManager::KEY, {{FitnessManager::DAILY_STEPS_KEY, "0"}, {FitnessManager::CURRENT_HOUR_STEPS_KEY, "0"}, {FitnessManager::LAST_FETCH_UTC_KEY, "0"}, {FitnessManager::LAST_FETCH_LOCAL_KEY, "0"}}}
 };
 nvs_handle_t ConfigManager::nvsHandle;
 
@@ -50,6 +52,18 @@ int ConfigManager::getConfigInt(const std::string& group, const std::string& key
     return 0;
 }
 
+// Get a configuration value as a 64-bit integer
+int64_t ConfigManager::getConfig64(const std::string& group, const std::string& key) {
+    if (hasConfigValue(group, key)) {
+        return std::stoll(configMap[group][key]);
+    } else if (defaultConfigMap.find(group) != defaultConfigMap.end() && 
+               defaultConfigMap[group].find(key) != defaultConfigMap[group].end()) {
+        return std::stoll(defaultConfigMap[group][key]);
+    }
+    ESP_LOGW(TAG, "Config value not found and no default available for group: %s, key: %s", group.c_str(), key.c_str());
+    return 0;
+}
+
 // Check if a configuration value exists
 bool ConfigManager::hasConfigValue(const std::string& group, const std::string& key) {
     return configMap.find(group) != configMap.end() && configMap[group].find(key) != configMap[group].end();
@@ -67,6 +81,17 @@ bool ConfigManager::setConfigString(const std::string& group, const std::string&
 
 // Set a configuration value as an integer
 bool ConfigManager::setConfigInt(const std::string& group, const std::string& key, int value) {
+    std::string strValue = std::to_string(value);
+    if (!hasConfigValue(group, key) || configMap[group][key] != strValue) {
+        configMap[group][key] = strValue;
+        serializeConfig();
+        return true;
+    }
+    return false;
+}
+
+// Set a configuration value as a 64-bit integer
+bool ConfigManager::setConfig64(const std::string& group, const std::string& key, int64_t value) {
     std::string strValue = std::to_string(value);
     if (!hasConfigValue(group, key) || configMap[group][key] != strValue) {
         configMap[group][key] = strValue;

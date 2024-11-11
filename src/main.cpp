@@ -23,7 +23,7 @@ extern "C" {
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
 #include "VibrationDriver.h"
-
+#include "FitnessManager.h"
 #include <string>
 
 
@@ -60,43 +60,6 @@ extern "C" {
 }
 
 
-
-// void motionTask(void *pvParameters) {
-//     // MotionDriver *motionDriver = static_cast<MotionDriver *>(pvParameters);
-    
-//     uint32_t stepCount = 0;
-
-//     while (true) {
-//         motionDriver->readStepCount(stepCount);
-
-//         ESP_LOGI(TAG, "Step Count %d", (int)stepCount);
-//         bool isPedometerRunning;
-//         esp_err_t ret = motionDriver->isPedometerRunning(isPedometerRunning);
-//         if (ret == ESP_OK) {
-//             ESP_LOGI(TAG, "Pedometer is %s", isPedometerRunning ? "running" : "stopped");
-//         } else {
-//             ESP_LOGE(TAG, "Failed to check pedometer status");
-//         }
-
-
-//         // Wait for 2 seconds
-//         vTaskDelay(pdMS_TO_TICKS(2000));
-//     }
-// }
-
-
-// void wifiStatusTask(void *pvParameters) {
-//     while (true) {
-//         if (WifiManager::isConnected()) {
-//             ESP_LOGI(TAG, "WiFi is connected");
-//             ESP_LOGI(TAG, "Signal strength: %d dBm", WifiManager::getSignalStrength());
-//             ESP_LOGI(TAG, "Local IP: %s", WifiManager::getIpAddress().c_str());
-//         } else {
-//             ESP_LOGI(TAG, "WiFi is not connected");
-//         }
-//         vTaskDelay(pdMS_TO_TICKS(5000)); // Wait for 5 seconds
-//     }
-// }
 
 extern "C" void app_main() {
     // Initialize GraphicsDriver
@@ -151,9 +114,9 @@ extern "C" void app_main() {
     appManager.registerApp(appSelector);
 
     appManager.registerApp(wifiDebugApp);
-    appManager.registerApp(motionDebugApp);
+    // appManager.registerApp(motionDebugApp);
 
-    appManager.launchApp(motionDebugApp->getAppName());
+    appManager.launchApp(clockApp->getAppName());
 
     // Create tasks for time management
     xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL, 0);
@@ -174,8 +137,6 @@ extern "C" void app_main() {
 
     xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
 
-    // xTaskCreate(motionTask, "Motion Task", 4048, &motionDriver, 5, nullptr);
-
     if (ConfigManager::getConfigInt("Network", "Enabled")) {
         WifiManager::turnOn();
         WifiManager::connect();
@@ -187,12 +148,21 @@ extern "C" void app_main() {
     MotionDriver::enableGyroAndAcc();
     vTaskDelay(pdMS_TO_TICKS(100));
     ret = MotionDriver::enablePedometer();
-    if (ret != ESP_OK) ESP_LOGE("MotionDebug", "can;t enable petometer");
+    if (ret != ESP_OK) ESP_LOGE("MotionDebug", "can't enable pedometer");
 
+    std::string data = FileManager::readData("fitness", "hourly_steps.txt");
+    ESP_LOGI(TAG, "Fitness Hourly Data: %s", data.c_str());
 
-    // xTaskCreate(wifiStatusTask, "WiFi Status Task", 4096, NULL, 5, NULL);
+    
+    xTaskCreate(
+        FitnessManager::handle_fitness_task,
+        "fitness_task",
+        8192,
+        NULL,
+        5,
+        NULL
+    );
 
-    // Initialize TimeEventsManager
     TimeEventsManager::init();
 
 }

@@ -6,6 +6,8 @@
 #include "app_screen.h"
 #include "ui_components.h"
 #include "WifiManager.h"
+#include "FitnessManager.h"
+
 static const char* TAG = "Clock";
 
 Clock::Clock(AppManager& manager)
@@ -15,6 +17,8 @@ Clock::Clock(AppManager& manager)
       screenObj(NULL),
       batteryLabel(NULL),
       batteryIcon(NULL),
+      wifiIcon(NULL),
+      stepsLabel(NULL),
       appManager(manager),
       batteryManager(manager.getBatteryManager()),
       batteryUpdateTimer(NULL) {}
@@ -36,6 +40,16 @@ void Clock::launch() {
     lv_style_init(&style_title);
     lv_style_set_text_color(&style_title, lv_color_hex(0xFF0000)); // Red color
     lv_obj_add_style(clockTitleLabel, &style_title, 0);
+    
+    stepsLabel = lv_label_create(screenObj);
+    lv_label_set_text(stepsLabel, "0 Steps");
+    lv_obj_align(stepsLabel, LV_ALIGN_TOP_MID, 0, 30); // Align title at the top middle
+
+    // Set the style for the clock title
+    static lv_style_t steps_style;
+    lv_style_init(&steps_style);
+    lv_style_set_text_color(&steps_style, COLOR_MUTED_TEXT); // Red color
+    lv_obj_add_style(stepsLabel, &steps_style, 0);
 
     clockTimeLabel = lv_label_create(screenObj);
     lv_label_set_text(clockTimeLabel, "--:--:-- --");
@@ -93,10 +107,12 @@ void Clock::launch() {
     // Update the battery level immediately and periodically
     updateBatteryLevel();
     updateWifiIcon();
+    updateSteps();
     batteryUpdateTimer = lv_timer_create([](lv_timer_t* timer) {
         Clock* clock = static_cast<Clock*>(timer->user_data);
         clock->updateBatteryLevel();
         clock->updateWifiIcon();
+        clock->updateSteps();
     }, 4000, this);
 }
 
@@ -200,6 +216,12 @@ void Clock::updateWifiIcon() {
 
         lv_obj_set_style_text_color(wifiIcon, color, LV_PART_MAIN);
     }
+}
+
+void Clock::updateSteps() {
+    int steps = ConfigManager::getConfigInt(FitnessManager::KEY, FitnessManager::DAILY_STEPS_KEY);
+    std::string stepText = std::to_string(steps) + " Steps";
+    lv_label_set_text(stepsLabel, stepText.c_str());
 }
 
 void Clock::backgroundActivity() {

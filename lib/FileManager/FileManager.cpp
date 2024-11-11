@@ -56,6 +56,19 @@ bool FileManager::writeData(const std::string& app, const std::string& filename,
     return true;
 }
 
+bool FileManager::appendData(const std::string& app, const std::string& filename, const std::string& data) {
+    std::string dirPath = "/spiffs/" + app;
+    std::string filepath = dirPath + "/" + filename;
+    std::ofstream file(filepath, std::ios::app);
+    if (!file) {
+        ESP_LOGE("FileManager", "Failed to open file for writing: %s", filepath.c_str());
+        return false;
+    }
+    file << data;
+    file.close();
+    return true;
+}
+
 std::string FileManager::readData(const std::string& app, const std::string& filename) {
     std::string dirPath = "/spiffs/" + app;
     std::string filepath = dirPath + "/" + filename;

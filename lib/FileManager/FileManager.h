@@ -7,8 +7,9 @@ class FileManager {
 public:
     FileManager();
     ~FileManager();
-    bool writeData(const std::string& app, const std::string& filename, const std::string& data);
-    std::string readData(const std::string& app, const std::string& filename);
+    static bool writeData(const std::string& app, const std::string& filename, const std::string& data);
+    static bool appendData(const std::string& app, const std::string& filename, const std::string& data);
+    static std::string readData(const std::string& app, const std::string& filename);
 };
 
 #endif // FILEMANAGER_H

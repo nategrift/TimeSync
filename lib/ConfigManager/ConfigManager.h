@@ -23,6 +23,9 @@ public:
 
     static void serializeConfig();
     static bool deserializeConfig();
+
+    static int64_t getConfig64(const std::string& group, const std::string& key);
+    static bool setConfig64(const std::string& group, const std::string& key, int64_t value);
 };
 
 
