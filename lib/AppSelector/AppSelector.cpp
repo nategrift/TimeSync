@@ -112,6 +112,8 @@ void AppSelector::launch() {
     lv_obj_add_style(btn_settings, &style_btn, LV_PART_MAIN);
     lv_obj_t* btn_timer = lv_list_add_btn(screenObj, LV_SYMBOL_BELL, "Timer");
     lv_obj_add_style(btn_timer, &style_btn, LV_PART_MAIN);
+    lv_obj_t* btn_fitness = lv_list_add_btn(screenObj, LV_SYMBOL_NEXT, "Fitness");
+    lv_obj_add_style(btn_fitness, &style_btn, LV_PART_MAIN);
 
     // Add event handler for each button
     auto event_cb = [](lv_event_t* event) {
@@ -140,6 +142,7 @@ void AppSelector::launch() {
     // lv_obj_add_event_cb(btn_alarm, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_stopwatch, event_cb, LV_EVENT_CLICKED, this);
     lv_obj_add_event_cb(btn_settings, event_cb, LV_EVENT_CLICKED, this);
+    lv_obj_add_event_cb(btn_fitness, event_cb, LV_EVENT_CLICKED, this);
 }
 
 void AppSelector::close() {

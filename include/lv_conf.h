@@ -39,6 +39,7 @@
 /* 1: Enable input devices */
 #define LV_USE_INDEV    1
 
+#define LV_FONT_MONTSERRAT_48 1
 #define LV_FONT_MONTSERRAT_30 1
 #define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_12 1

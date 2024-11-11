@@ -12,6 +12,7 @@
 #include "WifiManager.h"
 #include "NotificationManager.h"
 #include "MotionDriver.h"
+#include "FitnessManager.h"
 
 
 static const char *TAG = "Settings";
@@ -205,7 +206,10 @@ Settings::Settings(AppManager &manager)
          []() -> std::string
          { return ""; },
          [](const std::string &value)
-         { FileManager::writeData("fitness", "hourly_steps.txt", ""); },
+         { 
+            FileManager::writeData("fitness", "hourly_steps.txt", ""); 
+            ConfigManager::setConfigInt(FitnessManager::KEY, FitnessManager::DAILY_STEPS_KEY, 0);
+         },
          []() -> std::string
          { return ""; },
          SettingType::BUTTON, nullptr},

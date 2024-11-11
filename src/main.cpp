@@ -40,6 +40,7 @@ extern "C" {
 #include "Timer.h"
 #include "Settings.h"
 #include "AppSelector.h"
+#include "Fitness.h"
 
 // END APPS
 
@@ -101,6 +102,7 @@ extern "C" void app_main() {
     Stopwatch* stopWatchApp = new Stopwatch(appManager);
     Timer* timerApp = new Timer(appManager);
     Settings* settingsApp = new Settings(appManager);
+    Fitness* fitnessApp = new Fitness(appManager);
     WifiDebug* wifiDebugApp = new WifiDebug(appManager);
     MotionDebug* motionDebugApp = new MotionDebug(appManager);
     // Not selectable app
@@ -111,6 +113,7 @@ extern "C" void app_main() {
     appManager.registerApp(stopWatchApp);
     appManager.registerApp(timerApp);
     appManager.registerApp(settingsApp);
+    appManager.registerApp(fitnessApp);
     appManager.registerApp(appSelector);
 
     appManager.registerApp(wifiDebugApp);
