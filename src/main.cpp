@@ -42,6 +42,19 @@ extern "C" {
 #include "AppSelector.h"
 #include "Fitness.h"
 
+
+extern "C" {
+    #define TAG "LUA_IO"
+
+    #define lua_writestring(s, l) ESP_LOGI(TAG, "%.*s", (int)(l), (s))
+    #define lua_writeline() ESP_LOGI(TAG, "\n")
+
+    #include "lua.h"
+    #include "lauxlib.h"
+    #include "lualib.h"
+    
+}
+
 // END APPS
 
 // Define GPIO pins for the joystick and button
@@ -63,6 +76,7 @@ extern "C" {
 
 
 extern "C" void app_main() {
+
     // Initialize GraphicsDriver
     GraphicsDriver graphicsDriver;
     graphicsDriver.init();
@@ -91,6 +105,18 @@ extern "C" void app_main() {
     fileManager.writeData("TimeEvents", "events.csv", ""); 
     ConfigManager::init();
     TimeManager::init();
+
+
+    lua_State *L = luaL_newstate();
+    luaL_openlibs(L);
+    std::string luaCode = fileManager.readData("apps", "test.lua");
+    ESP_LOGI(TAG, "Data: %s", luaCode.c_str());
+
+    if (luaL_dostring(L, luaCode.c_str()) != LUA_OK) {
+        printf("Error: %s\n", lua_tostring(L, -1));
+    }
+
+    lua_close(L);  // Close Lua state
 
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
