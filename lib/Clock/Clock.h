@@ -1,11 +1,11 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
+#include "lvgl.h"
 #include "IApp.h"
 #include "AppManager.h"
 #include "TimeManager.h"
 #include "BatteryManager.h"
-#include "lvgl.h"
 #include "ui_components.h"
 #include "LVGLMutex.h"
 
@@ -39,5 +39,5 @@ private:
     void updateWifiIcon();
     void updateSteps();
 };
-
 #endif // CLOCK_H
+

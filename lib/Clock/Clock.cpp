@@ -1,3 +1,4 @@
+#include "lvgl.h"
 #include "Clock.h"
 #include "AppManager.h"
 #include "BatteryManager.h"
@@ -94,10 +95,10 @@ void Clock::launch() {
     lv_label_set_text(wifiIcon, LV_SYMBOL_WIFI);
     lv_obj_set_style_text_color(wifiIcon, COLOR_TEXT, LV_PART_MAIN);
 
-    // Set up the time update listener
-    timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
-        this->handleTimeUpdate(timeinfo);
-    });
+    // // Set up the time update listener
+    // timeListenerId = TimeManager::addTimeUpdateListener([this](const struct tm& timeinfo) {
+    //     this->handleTimeUpdate(timeinfo);
+    // });
 
     // set default time
     // unsafe calling because we already in lvgl loop
@@ -108,12 +109,12 @@ void Clock::launch() {
     updateBatteryLevel();
     updateWifiIcon();
     updateSteps();
-    batteryUpdateTimer = lv_timer_create([](lv_timer_t* timer) {
-        Clock* clock = static_cast<Clock*>(timer->user_data);
-        clock->updateBatteryLevel();
-        clock->updateWifiIcon();
-        clock->updateSteps();
-    }, 4000, this);
+    // batteryUpdateTimer = lv_timer_create([](lv_timer_t* timer) {
+    //     Clock* clock = static_cast<Clock*>(timer->user_data);
+    //     clock->updateBatteryLevel();
+    //     clock->updateWifiIcon();
+    //     clock->updateSteps();
+    // }, 4000, this);
 }
 
 void Clock::close() {

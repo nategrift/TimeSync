@@ -10,6 +10,7 @@
 extern "C" {
 #include "gc9a01.h"
 #include "display.h"
+#include "lvgl.h"
 }
 
 static const char *TAG = "AwakeManager";
@@ -115,11 +116,7 @@ void AwakeManager::wakeDevice(int before_sleep_time) {
 
     lv_tick_inc(sleep_duration);
 
-    lv_disp_trig_activity(NULL);
-    lv_disp_t *disp = lv_disp_get_default();
-    if (disp != NULL) {
-        disp->last_activity_time = lv_tick_get();
-    }
+    lv_display_trigger_activity(NULL);
 
     // Restore screen brightness
     int brightness = ConfigManager::getConfigInt("General", "Brightness");

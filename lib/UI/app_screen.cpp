@@ -109,7 +109,7 @@ lv_dir_t detect_gesture(const lv_point_t &start, const lv_point_t &end)
 void press_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
     AppManager *appManager = (AppManager *)lv_event_get_user_data(e);
     static bool long_press_triggered = false;
 

@@ -145,7 +145,7 @@ void launch_buzz_pattern(const int* pattern, int patternLength, int repeatCount)
     currentBuzzParams->patternLength = patternLength;
     currentBuzzParams->repeatCount = repeatCount;
 
-    xTaskCreate(buzz_pattern_task, "buzz_pattern_task", 4096, NULL, 5, &buzzerTaskHandle);
+    xTaskCreatePinnedToCore(buzz_pattern_task, "buzz_pattern_task", 4096, NULL, 5, &buzzerTaskHandle, 0);
 }
 
 void beep(int ms_duration) {

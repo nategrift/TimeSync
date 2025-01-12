@@ -106,13 +106,14 @@ void Fitness::launch() {
     lv_obj_add_style(stepsHourlyGoalArc, &style_hourly_arc_ind, LV_PART_INDICATOR);
 
     // Create the FreeRTOS task
-    xTaskCreate(
+    xTaskCreatePinnedToCore(
         stepsTaskWrapper,    // Static task function wrapper
         "steps_task",        // Task name
         2048,               // Stack size
         this,               // Parameter passed to task (this pointer)
         5,                  // Task priority
-        &stepsTaskHandle    // Task handle
+        &stepsTaskHandle,   // Task handle
+        0                   // Core ID
     );
 }
 

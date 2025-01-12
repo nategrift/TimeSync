@@ -86,7 +86,7 @@ TouchData TouchDriver::getTouchCoordinates() {
     return TouchData();
 }
 
-void TouchDriver::lvglRead(lv_indev_drv_t *drv, lv_indev_data_t *data) {
+void TouchDriver::lvglRead(lv_indev_t *drv, lv_indev_data_t *data) {
     TouchData touch = getTouchCoordinates();
     if (touch.touch_detected) {
         data->point.x = touch.x;

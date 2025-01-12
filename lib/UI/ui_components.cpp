@@ -1,4 +1,5 @@
 #include "ui_components.h"
+#include <string.h>
 
 lv_obj_t* get_default_roller(lv_obj_t* parent) {
     lv_obj_t* roller = lv_roller_create(parent);

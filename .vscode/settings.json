@@ -74,6 +74,17 @@
         "touchdriver.h": "c",
         "list": "cpp",
         "esp_lcd_gc9a01.h": "c",
-        "print_more.h": "c"
+        "print_more.h": "c",
+        "lvgl.h": "c",
+        "rotable.h": "c",
+        "display.h": "c",
+        "lv_init.h": "c",
+        "lv_display.h": "c",
+        "private.h": "c",
+        "luavgl.h": "c",
+        "lua.h": "c",
+        "lauxlib.h": "c",
+        "bitset": "cpp",
+        "regex": "cpp"
     }
 }

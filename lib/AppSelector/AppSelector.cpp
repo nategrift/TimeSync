@@ -29,7 +29,7 @@ static void scroll_event_cb(lv_event_t * e)
     }
 
     is_scrolling = true;
-    lv_obj_t * cont = lv_event_get_target(e);
+    lv_obj_t * cont = (lv_obj_t *)lv_event_get_target(e);
 
     lv_area_t cont_a;
     lv_obj_get_coords(cont, &cont_a);
@@ -118,7 +118,7 @@ void AppSelector::launch() {
     // Add event handler for each button
     auto event_cb = [](lv_event_t* event) {
         lv_event_code_t code = lv_event_get_code(event);
-        lv_obj_t* target = lv_event_get_target(event);
+        lv_obj_t* target = (lv_obj_t *)lv_event_get_target(event);
 
         if (code == LV_EVENT_CLICKED && !is_scrolling) {
             AppSelector* appSelector = reinterpret_cast<AppSelector*>(lv_event_get_user_data(event));
@@ -132,7 +132,7 @@ void AppSelector::launch() {
     };
 
         /*Update the buttons position manually for first*/
-    lv_event_send(screenObj, LV_EVENT_SCROLL, NULL);
+    lv_obj_send_event(screenObj, LV_EVENT_SCROLL, NULL);
 
     /*Be sure the fist button is in the middle*/
     lv_obj_scroll_to_view(lv_obj_get_child(screenObj, 0), LV_ANIM_OFF);

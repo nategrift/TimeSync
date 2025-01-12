@@ -30,7 +30,7 @@
 /* STRUCTURES & TYPEDEFS -----------------------------------------------------*/
 
 /* VARIABLES -----------------------------------------------------------------*/
-extern lv_disp_drv_t disp_drv;
+extern lv_display_t *disp_drv;
 /* FUNCTIONS DECLARATION -----------------------------------------------------*/
 bool display_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx);
 
@@ -39,7 +39,6 @@ void lvglDisplayConfig(void);
 void pause_lvgl_tick_timer();
 void resume_lvgl_tick_timer();
 
-static esp_timer_handle_t lvgl_tick_timer = NULL;
 #endif /* MAIN_DISPLAY_H_ */
 
 /*************************************** USEFUL ELECTRONICS*****END OF FILE****/

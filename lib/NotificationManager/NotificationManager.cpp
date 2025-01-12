@@ -89,7 +89,7 @@ void NotificationManager::showNotification(Notification& notification) {
     lv_obj_align(dismissButton, LV_ALIGN_CENTER, 0, 70);
     lv_obj_add_flag(dismissButton, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_add_event_cb(dismissButton, [](lv_event_t* e) {
-        lv_obj_t * button = lv_event_get_target(e);
+        lv_obj_t * button = (lv_obj_t *)lv_event_get_target(e);
         Notification* notification = &notifications.front();
         NotificationManager::dismissNotification(notification->id);
 

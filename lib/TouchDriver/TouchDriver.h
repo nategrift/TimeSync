@@ -23,7 +23,7 @@ public:
 
     esp_err_t init();
     TouchData getTouchCoordinates();
-    void lvglRead(lv_indev_drv_t *drv, lv_indev_data_t *data);
+    void lvglRead(lv_indev_t *drv, lv_indev_data_t *data);
 
 private:
     static const uint8_t I2C_ADDR = 0x15; // I2C address of the CST816S

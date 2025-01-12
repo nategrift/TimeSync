@@ -22,7 +22,7 @@ void GraphicsDriver::init() {
     LvglMutex::init();
 
     // // Create LVGL task
-    xTaskCreate(lvgl_task, "Rendering Task", 128000, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 128000, NULL, 4, NULL, 0);
     esp_task_wdt_config_t twdt_config = {
         .timeout_ms = 5000,                // 5 second timeout
         .idle_core_mask = (1 << 0),        // Watch core 0
@@ -84,15 +84,12 @@ void GraphicsDriver::lvgl_task(void *arg) {
 
 void GraphicsDriver::setupTouchDriver(TouchDriver &touchDriver) {
     // Initialize LVGL input device driver
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = [](lv_indev_drv_t *drv, lv_indev_data_t *data) {
-        TouchDriver *touch = static_cast<TouchDriver*>(drv->user_data);
+    lv_indev_t * indev = lv_indev_create();        /* Create input device connected to Default Display. */
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);   /* Touch pad is a pointer-like device. */
+    lv_indev_set_read_cb(indev, [](lv_indev_t *drv, lv_indev_data_t *data) {
+        TouchDriver *touch = static_cast<TouchDriver*>(lv_indev_get_user_data(drv));
         touch->lvglRead(drv, data);
-    };
-    indev_drv.user_data = &touchDriver;
-    lv_indev_t *my_indev = lv_indev_drv_register(&indev_drv);
+    }); 
 }
 
 void GraphicsDriver::init_backlight_pwm() {

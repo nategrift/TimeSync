@@ -7,6 +7,8 @@ extern "C" {
 
 }
 
+#include "lvgl.h"
+
 #include "buzzer_driver.h"
 #include "TimeManager.h"
 #include "InputManager.h"
@@ -17,8 +19,6 @@ extern "C" {
 #include "TimeEventsManager.h"
 #include "NotificationManager.h"
 #include "WifiManager.h"
-#include "WifiDebug.h"
-#include "MotionDebug.h"
 #include "MotionDriver.h"
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"
@@ -27,7 +27,7 @@ extern "C" {
 #include <string>
 
 
-#include "lvgl.h"
+
 #include "nvs_flash.h"
 
 
@@ -36,11 +36,17 @@ extern "C" {
 
 // #include "Alarm.h"
 #include "Clock.h"
-#include "Stopwatch.h"
-#include "Timer.h"
-#include "Settings.h"
+// #include "Stopwatch.h"
+// #include "Timer.h"
+// #include "Settings.h"
 #include "AppSelector.h"
-#include "Fitness.h"
+// #include "Fitness.h"
+
+// Debug apps
+// #include "WifiDebug.h"
+// #include "MotionDebug.h"
+
+#include "LVGLMutex.h"
 
 
 extern "C" {
@@ -52,6 +58,8 @@ extern "C" {
     #include "lua.h"
     #include "lauxlib.h"
     #include "lualib.h"
+
+    #include "luavgl.h"
     
 }
 
@@ -73,7 +81,43 @@ extern "C" {
     ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
 }
 
+static bool shouldClose = false;
 
+int luaClose(lua_State *L) {
+    ESP_LOGI(TAG, "Lua state is closing from within Lua script");
+    shouldClose = true;
+    return 0; 
+}
+
+void runLuaScriptTask(void *pvParameters) {
+    lua_State *L = luaL_newstate();
+    luaL_openlibs(L);
+    luaL_requiref(L, "lvgl", luaopen_lvgl, 1);
+    lua_pop(L, 1);
+    // add a function to close lua state
+    lua_register(L, "close", luaClose);
+
+    FileManager* fileManager = static_cast<FileManager*>(pvParameters);
+
+    std::string luaCode = fileManager->readData("apps", "test.lua");
+    ESP_LOGI(TAG, "Data: %s", luaCode.c_str());
+
+    if (luaL_dostring(L, luaCode.c_str()) != LUA_OK) {
+        printf("Error: %s\n", lua_tostring(L, -1));
+    }
+
+    while (!shouldClose) {
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay to prevent tight loop
+    }
+
+    LvglMutex::lock();
+    lua_close(L);
+    LvglMutex::unlock();
+
+     while (true) {
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay to prevent tight loop
+    }
+}
 
 extern "C" void app_main() {
 
@@ -106,18 +150,6 @@ extern "C" void app_main() {
     ConfigManager::init();
     TimeManager::init();
 
-
-    lua_State *L = luaL_newstate();
-    luaL_openlibs(L);
-    std::string luaCode = fileManager.readData("apps", "test.lua");
-    ESP_LOGI(TAG, "Data: %s", luaCode.c_str());
-
-    if (luaL_dostring(L, luaCode.c_str()) != LUA_OK) {
-        printf("Error: %s\n", lua_tostring(L, -1));
-    }
-
-    lua_close(L);  // Close Lua state
-
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
@@ -125,24 +157,24 @@ extern "C" void app_main() {
 
     Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);
-    Stopwatch* stopWatchApp = new Stopwatch(appManager);
-    Timer* timerApp = new Timer(appManager);
-    Settings* settingsApp = new Settings(appManager);
-    Fitness* fitnessApp = new Fitness(appManager);
-    WifiDebug* wifiDebugApp = new WifiDebug(appManager);
-    MotionDebug* motionDebugApp = new MotionDebug(appManager);
+    // Stopwatch* stopWatchApp = new Stopwatch(appManager);
+    // Timer* timerApp = new Timer(appManager);
+    // Settings* settingsApp = new Settings(appManager);
+    // Fitness* fitnessApp = new Fitness(appManager);
+    // WifiDebug* wifiDebugApp = new WifiDebug(appManager);
+    // MotionDebug* motionDebugApp = new MotionDebug(appManager);
     // Not selectable app
     AppSelector* appSelector = new AppSelector(appManager);
 
     appManager.registerApp(clockApp);
     // appManager.registerApp("Alarm", alarmApp);
-    appManager.registerApp(stopWatchApp);
-    appManager.registerApp(timerApp);
-    appManager.registerApp(settingsApp);
-    appManager.registerApp(fitnessApp);
+    // appManager.registerApp(stopWatchApp);
+    // appManager.registerApp(timerApp);
+    // appManager.registerApp(settingsApp);
+    // appManager.registerApp(fitnessApp);
     appManager.registerApp(appSelector);
 
-    appManager.registerApp(wifiDebugApp);
+    // appManager.registerApp(wifiDebugApp);
     // appManager.registerApp(motionDebugApp);
 
     appManager.launchApp(clockApp->getAppName());
@@ -159,12 +191,12 @@ extern "C" void app_main() {
     int brightness = ConfigManager::getConfigInt("General", "Brightness");
     GraphicsDriver::set_backlight_brightness(brightness);
 
-    lv_disp_set_rotation(NULL, LV_DISP_ROT_90);
+    lv_display_set_rotation(NULL, LV_DISPLAY_ROTATION_90);
 
 
     init_buzzer();
 
-    xTaskCreate(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL, 0);
 
     if (ConfigManager::getConfigInt("Network", "Enabled")) {
         WifiManager::turnOn();
@@ -183,15 +215,25 @@ extern "C" void app_main() {
     ESP_LOGI(TAG, "Fitness Hourly Data: %s", data.c_str());
 
     
-    xTaskCreate(
-        FitnessManager::handle_fitness_task,
-        "fitness_task",
-        8192,
-        NULL,
-        5,
-        NULL
-    );
+    // xTaskCreate(
+    //     FitnessManager::handle_fitness_task,
+    //     "fitness_task",
+    //     8192,
+    //     NULL,
+    //     5,
+    //     NULL
+    // );
 
     TimeEventsManager::init();
 
+    // Create a task to run the Lua script on core 1
+    xTaskCreatePinnedToCore(
+        runLuaScriptTask,   // Task function
+        "LuaScriptTask",    // Task name
+        8192,               // Stack size
+        &fileManager,       // Task parameter
+        5,                  // Task priority
+        NULL,               // Task handle
+        0                   // Core ID (0 or 1)
+    );
 }
