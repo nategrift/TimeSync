@@ -56,13 +56,13 @@ void start_border_animation(lv_obj_t *obj)
     lv_anim_start(&anim);
 }
 
-void gesture_action(AppManager *appManager, lv_dir_t gesture)
+void gesture_action(lv_dir_t gesture)
 {
     switch (gesture)
     {
     case LV_DIR_TOP:
         ESP_LOGI(TAG, "SwipeUp");
-        appManager->launchApp("MotionDebug");
+        AppManager::launchApp("MotionDebug");
         break;
     case LV_DIR_BOTTOM:
         ESP_LOGI(TAG, "SwipeDown");
@@ -77,10 +77,7 @@ void gesture_action(AppManager *appManager, lv_dir_t gesture)
         ESP_LOGI(TAG, "SwipeRight");
         break;
     default:
-        if (appManager)
-        {
-            appManager->launchApp("AppSelector");
-        }
+        AppManager::launchApp("AppSelector");
         break;
     }
 }
@@ -110,7 +107,6 @@ void press_event_handler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
-    AppManager *appManager = (AppManager *)lv_event_get_user_data(e);
     static bool long_press_triggered = false;
 
     if (code == LV_EVENT_PRESSED)
@@ -156,12 +152,12 @@ void press_event_handler(lv_event_t *e)
         // HANDLE ACTION
         if (long_press_triggered)
         {
-            gesture_action(appManager, gesture);
+            gesture_action(gesture);
         }
     }
 }
 
-lv_obj_t *get_app_container(AppManager &appManager)
+lv_obj_t *get_app_container()
 {
     // Assume the display is a circle with a radius equal to half of the horizontal resolution
     int radius = LV_HOR_RES / 2;
@@ -175,7 +171,7 @@ lv_obj_t *get_app_container(AppManager &appManager)
     lv_obj_set_style_pad_all(screenObj, 0, LV_PART_MAIN);
     lv_obj_set_style_outline_width(screenObj, 0, LV_PART_MAIN);
 
-    lv_obj_add_event_cb(screenObj, press_event_handler, LV_EVENT_ALL, &appManager);
+    lv_obj_add_event_cb(screenObj, press_event_handler, LV_EVENT_ALL, NULL);
 
     // Apply the initialized circle style
     init_circle_style();

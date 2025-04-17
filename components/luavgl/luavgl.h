@@ -95,7 +95,7 @@ LUALIB_API void luavgl_set_font_extension(lua_State *L, make_font_cb make,
                                           delete_font_cb d);
 
 /* on embedded device, may call lib open manually. */
-LUALIB_API int luaopen_lvgl(lua_State *L);
+LUALIB_API int luaopen_lvgl(lua_State *L, lv_obj_t *app_root);
 
 /* object creation */
 

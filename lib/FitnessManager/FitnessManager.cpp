@@ -70,7 +70,7 @@ namespace FitnessManager {
             ss << lastFetchUTCTime << "," << currentHourSteps << "\n";
             
             // Append to the hourly log file
-            FileManager::appendData("fitness", "hourly_steps.txt", ss.str());
+            file_manager_append_data("fitness", "hourly_steps.txt", ss.str().c_str());
             ESP_LOGI(FitnessManager::TAG, "Saved UTC hour steps to file: timestamp=%lld, steps=%d", 
                     currentUTCTime, currentHourSteps);
 

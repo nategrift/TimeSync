@@ -2,3 +2,8 @@
 nvs,      data, nvs,     0x9000,    0x4000,
 factory,  app,  factory, 0x10000,   0xFE0000,
 spiffs,   data, spiffs,  0xFF0000,  0x10000
+
+
+# more spiffs
+#factory,  app,  factory, 0x10000,   0x7F0000,
+#spiffs,   data, spiffs,  0x800000,  0x7F0000

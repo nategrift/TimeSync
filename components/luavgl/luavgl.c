@@ -98,7 +98,7 @@ static void root_delete_cb(lv_event_t *e)
   ctx->root = NULL;
 }
 
-LUALIB_API int luaopen_lvgl(lua_State *L)
+LUALIB_API int luaopen_lvgl(lua_State *L, lv_obj_t *app_root)
 {
   luavgl_ctx_t *ctx = luavgl_context(L);
 
@@ -110,12 +110,15 @@ LUALIB_API int luaopen_lvgl(lua_State *L)
   lua_settable(L, -3);
   lua_pop(L, 1);
 
-  lv_obj_t *root = ctx->root;
-  // if (root == NULL) {
-    LV_LOG_INFO("create root obj for lua");
-    root = lv_obj_create(lv_scr_act());
-    ctx->root = root;
-  // }
+  
+  lv_obj_t *root = app_root;
+  ctx->root = root;
+  // root = app_root;
+  // lv_obj_set_size(root, LV_HOR_RES, LV_VER_RES);
+  // lv_obj_set_pos(root, 0, 0);
+  // lv_obj_set_style_pad_all(root, 0, LV_PART_MAIN);
+  // lv_obj_set_style_outline_width(root, 0, LV_PART_MAIN);
+  // lv_obj_set_style_border_width(root, 0, LV_PART_MAIN);
 
   if (ctx->pcall == NULL)
     ctx->pcall = luavgl_pcall;
@@ -132,9 +135,9 @@ LUALIB_API int luaopen_lvgl(lua_State *L)
    * */
   lua_rawset(L, -3);
 
-  lv_obj_remove_style_all(root);
-  lv_obj_set_size(root, LV_HOR_RES, LV_VER_RES);
-  lv_obj_clear_flag(root, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+  // lv_obj_remove_style_all(root);
+  // lv_obj_set_size(root, LV_HOR_RES, LV_VER_RES);
+  // lv_obj_clear_flag(root, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
 
   luavgl_obj_init(L);
   luavgl_widgets_init(L);

@@ -38,7 +38,6 @@ public:
 
 private:
     static std::vector<TimeEvent> events;
-    static FileManager fileManager;
 
     static void serializeTimeEvents();
     static void deserializeTimeEvents();

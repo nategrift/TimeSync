@@ -35,11 +35,11 @@ extern "C" {
 // START APPS
 
 // #include "Alarm.h"
-#include "Clock.h"
+// #include "Clock.h"
 // #include "Stopwatch.h"
 // #include "Timer.h"
 // #include "Settings.h"
-#include "AppSelector.h"
+// #include "AppSelector.h"
 // #include "Fitness.h"
 
 // Debug apps
@@ -47,21 +47,8 @@ extern "C" {
 // #include "MotionDebug.h"
 
 #include "LVGLMutex.h"
+#include "app_runtime.h"
 
-
-extern "C" {
-    #define TAG "LUA_IO"
-
-    #define lua_writestring(s, l) ESP_LOGI(TAG, "%.*s", (int)(l), (s))
-    #define lua_writeline() ESP_LOGI(TAG, "\n")
-
-    #include "lua.h"
-    #include "lauxlib.h"
-    #include "lualib.h"
-
-    #include "luavgl.h"
-    
-}
 
 // END APPS
 
@@ -81,43 +68,6 @@ extern "C" {
     ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
 }
 
-static bool shouldClose = false;
-
-int luaClose(lua_State *L) {
-    ESP_LOGI(TAG, "Lua state is closing from within Lua script");
-    shouldClose = true;
-    return 0; 
-}
-
-void runLuaScriptTask(void *pvParameters) {
-    lua_State *L = luaL_newstate();
-    luaL_openlibs(L);
-    luaL_requiref(L, "lvgl", luaopen_lvgl, 1);
-    lua_pop(L, 1);
-    // add a function to close lua state
-    lua_register(L, "close", luaClose);
-
-    FileManager* fileManager = static_cast<FileManager*>(pvParameters);
-
-    std::string luaCode = fileManager->readData("apps", "test.lua");
-    ESP_LOGI(TAG, "Data: %s", luaCode.c_str());
-
-    if (luaL_dostring(L, luaCode.c_str()) != LUA_OK) {
-        printf("Error: %s\n", lua_tostring(L, -1));
-    }
-
-    while (!shouldClose) {
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay to prevent tight loop
-    }
-
-    LvglMutex::lock();
-    lua_close(L);
-    LvglMutex::unlock();
-
-     while (true) {
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay to prevent tight loop
-    }
-}
 
 extern "C" void app_main() {
 
@@ -142,20 +92,32 @@ extern "C" void app_main() {
     }
     ESP_ERROR_CHECK(ret);
 
+    file_manager_init();
+
     // Initialize the ConfigManager with the path to the configuration file
-    static FileManager fileManager;
     // ESP_LOGI(TAG, "Reset button held. Resetting configuration.");
     // fileManager.writeData("ConfigManager", "config.txt", "");
-    fileManager.writeData("TimeEvents", "events.csv", ""); 
+    file_manager_write_data("TimeEvents", "events.csv", ""); 
     ConfigManager::init();
     TimeManager::init();
 
     static InputManager inputManager(touchDriver);
     static BatteryManager batteryManager;
 
-    static AppManager appManager(touchDriver, fileManager, inputManager, batteryManager);
+    lv_indev_t *indev = lv_indev_get_act();
+    ESP_LOGI(TAG, "indev: %s", indev == NULL ? "NULL" : "NOT NULL");
 
-    Clock* clockApp = new Clock(appManager);
+    AppManager::loadAppsFromDisk();
+    ESP_LOGI(TAG, "App Manager loaded %d apps", AppManager::getAppRegistry().size());
+    for (const auto& app : AppManager::getAppRegistry()) {
+        ESP_LOGI(TAG, "App: %s, Version: %s, Author: %s, Entry Point: %s", 
+            app.name.c_str(),
+            app.version.c_str(), 
+            app.author.c_str(),
+            app.entry_point.c_str());
+    }
+
+    // Clock* clockApp = new Clock(appManager);
     // Alarm* alarmApp = new Alarm(appManager);
     // Stopwatch* stopWatchApp = new Stopwatch(appManager);
     // Timer* timerApp = new Timer(appManager);
@@ -164,20 +126,20 @@ extern "C" void app_main() {
     // WifiDebug* wifiDebugApp = new WifiDebug(appManager);
     // MotionDebug* motionDebugApp = new MotionDebug(appManager);
     // Not selectable app
-    AppSelector* appSelector = new AppSelector(appManager);
+    // AppSelector* appSelector = new AppSelector(appManager);
 
-    appManager.registerApp(clockApp);
+    // appManager.registerApp(clockApp);
     // appManager.registerApp("Alarm", alarmApp);
     // appManager.registerApp(stopWatchApp);
     // appManager.registerApp(timerApp);
     // appManager.registerApp(settingsApp);
     // appManager.registerApp(fitnessApp);
-    appManager.registerApp(appSelector);
+    // appManager.registerApp(appSelector);
 
     // appManager.registerApp(wifiDebugApp);
     // appManager.registerApp(motionDebugApp);
 
-    appManager.launchApp(clockApp->getAppName());
+    // appManager.launchApp(clockApp->getAppName());
 
     // Create tasks for time management
     xTaskCreatePinnedToCore(&TimeManager::timeTask, "Timing Task", 4096, nullptr, 5, NULL, 0);
@@ -211,8 +173,11 @@ extern "C" void app_main() {
     ret = MotionDriver::enablePedometer();
     if (ret != ESP_OK) ESP_LOGE("MotionDebug", "can't enable pedometer");
 
-    std::string data = FileManager::readData("fitness", "hourly_steps.txt");
-    ESP_LOGI(TAG, "Fitness Hourly Data: %s", data.c_str());
+    char* data = file_manager_read_data("fitness", "hourly_steps.txt");
+    if (data) {
+        ESP_LOGI(TAG, "Fitness Hourly Data: %s", data);
+        free(data);
+    }
 
     
     // xTaskCreate(
@@ -226,14 +191,23 @@ extern "C" void app_main() {
 
     TimeEventsManager::init();
 
-    // Create a task to run the Lua script on core 1
+    // Create a task to run the Lua scripts (the apps)
     xTaskCreatePinnedToCore(
-        runLuaScriptTask,   // Task function
-        "LuaScriptTask",    // Task name
-        8192,               // Stack size
-        &fileManager,       // Task parameter
-        5,                  // Task priority
-        NULL,               // Task handle
-        0                   // Core ID (0 or 1)
+        runLuaScriptTask,
+        "LuaScriptTask", 
+        8192*2,
+        NULL,
+        5,               
+        NULL,            
+        0                
     );
+
+    AppManager::launchApp("Clock");
+
+    char** files;
+    int count;
+    file_manager_get_files_in_directory("", &files, &count);
+    for (int i = 0; i < count; i++) {
+        ESP_LOGI(TAG, "File: %s", files[i]);    
+    }
 }

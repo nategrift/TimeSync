@@ -19,3 +19,6 @@ To see how the code is designed and the structure behind this TimeSync System, p
 
 
 xtensa-esp32-elf-addr2line -pfiaC -e C:\Users\nateg\OneDrive\Documents\GitHub\TimeSync\.pio\build\esp32s3box\firmware.elf 
+
+### How to upload files to flash
+ run `pio run -t uploadfs`

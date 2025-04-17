@@ -1,0 +1,82 @@
+local lvgl = require("lvgl")
+
+local root = lvgl.Object {
+    w = lvgl.HOR_RES(),
+    h = lvgl.VER_RES(),
+    x = 0,
+    y = 0,
+    bg_color = "#000",
+    bg_opa = lvgl.OPA(100),
+    pad_all = 0,
+    outline_width = 0,
+    border_width = 0,
+}
+
+local clock = root:Label {
+    text = "Clock",
+    text_color = lvgl.palette.darken(lvgl.palette.RED, 3),
+    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
+    align = {
+        type = lvgl.ALIGN.TOP_MID,
+        x_ofs = 0,
+        y_ofs = 10,
+    }
+}
+
+
+local time = root:Label {
+    text = "--/--/--",
+    text_color = "#fff",
+    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_30,
+    text_align = lvgl.ALIGN.CENTER,
+    align = lvgl.ALIGN.CENTER
+}
+
+
+local date = root:Label {
+    text = "00:00:00",
+    text_color = lvgl.palette.darken(lvgl.palette.GREY, 2),
+    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
+    align = {
+        type = lvgl.ALIGN.CENTER,
+        x_ofs = 0,
+        y_ofs = 25,
+    }
+}
+
+local function update_time()
+    local timeString = tostring(os.date("%I:%M:%S %p"))
+    local dateString = tostring(os.date("%a %b %d"))
+    time.text = timeString
+    date.text = dateString
+end
+update_time()
+
+local timer = lvgl.Timer({
+    period = 1000,
+    repeat_count = -1,
+    cb = function()
+        update_time()
+
+    end,
+    paused = false
+})
+
+local screen = lvgl.disp.get_scr_act()
+local press_start_time = nil
+screen:onevent(lvgl.EVENT.GESTURE, function (obj, code)
+    local indev = lvgl.indev.get_act()
+    if press_start_time then
+        local press_duration = os.clock() - press_start_time
+        if press_duration > 0.8 then
+            if indev:get_gesture_dir() == lvgl.DIR.LEFT then
+                openApp("Settings")
+            end
+        end
+    end
+end)
+
+root:onevent(lvgl.EVENT.PRESSED, function (obj, code)
+    press_start_time = os.clock()
+end)
+

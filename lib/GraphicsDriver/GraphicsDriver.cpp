@@ -18,6 +18,11 @@ void GraphicsDriver::init() {
     lvglDisplayConfig();
 
     lv_obj_set_style_bg_color(lv_scr_act(), lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_set_size(lv_scr_act(), LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_pos(lv_scr_act(), 0, 0);
+    lv_obj_set_style_pad_all(lv_scr_act(), 0, LV_PART_MAIN);
+    lv_obj_set_style_outline_width(lv_scr_act(), 0, LV_PART_MAIN);
+    lv_obj_set_style_border_width(lv_scr_act(), 0, LV_PART_MAIN);
 
     LvglMutex::init();
 

@@ -17,7 +17,7 @@ void border_anim_cb(void * var, int32_t value);
 void start_border_animation(lv_obj_t * obj);
 void press_event_handler(lv_event_t * e);
 
-lv_obj_t* get_app_container(AppManager& appManager);
+lv_obj_t* get_app_container();
 lv_obj_t* get_blank_screen(lv_obj_t *parent);
 
 #endif // APP_SCREEN_Hay before the animation starts in ms

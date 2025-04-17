@@ -207,7 +207,7 @@ Settings::Settings(AppManager &manager)
          { return ""; },
          [](const std::string &value)
          { 
-            FileManager::writeData("fitness", "hourly_steps.txt", ""); 
+            file_manager_write_data("fitness", "hourly_steps.txt", "");  
             ConfigManager::setConfigInt(FitnessManager::KEY, FitnessManager::DAILY_STEPS_KEY, 0);
          },
          []() -> std::string

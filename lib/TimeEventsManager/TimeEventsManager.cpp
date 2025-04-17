@@ -7,7 +7,6 @@
 static const char* TAG = "TimeEventsManager";
 
 std::vector<TimeEvent> TimeEventsManager::events;
-FileManager TimeEventsManager::fileManager;
 
 static int8_t eventCounter = 0; // Add this line
 
@@ -110,15 +109,15 @@ void TimeEventsManager::serializeTimeEvents() {
         ss << event.id << "," << static_cast<int>(event.type) << "," << event.startTime << ","
            << event.endTime << "," << event.label << "," << (event.active ? "1" : "0") << "\n";
     }
-    bool success = fileManager.writeData("TimeEvents", "events.csv", ss.str());
+    bool success = file_manager_write_data("TimeEvents", "events.csv", ss.str().c_str());
     if (!success) {
         ESP_LOGE(TAG, "Failed to serialize time events");
     }
 }
 
 void TimeEventsManager::deserializeTimeEvents() {
-    std::string data = fileManager.readData("TimeEvents", "events.csv");
-    if (data.empty()) {
+    char* data = file_manager_read_data("TimeEvents", "events.csv");
+    if (data == NULL) {
         ESP_LOGW(TAG, "No time events data found");
         return;
     }
@@ -160,7 +159,7 @@ void TimeEventsManager::deserializeTimeEvents() {
             ESP_LOGE(TAG, "Error parsing line: %s", line.c_str()); 
         }
     }
-
+    free(data);
     sortEventsByTime();
     ESP_LOGI(TAG, "Deserialized %zu time events", events.size());
 }

@@ -137,6 +137,8 @@ void lvglDisplayConfig(void)
     
     lv_display_set_flush_cb(disp_drv, example_lvgl_flush_cb);
 
+    lv_display_set_default(disp_drv);
+
     // Register the event handler for size change
     lv_display_add_event_cb(disp_drv, lvgl_event_handler, LV_EVENT_RESOLUTION_CHANGED, NULL);
 
