@@ -68,7 +68,6 @@ extern "C" {
     ESP_LOGI("TaskMonitor", "Core %d: %s", core, taskName);\
 }
 
-
 extern "C" void app_main() {
 
     // Initialize GraphicsDriver
@@ -155,7 +154,6 @@ extern "C" void app_main() {
 
     lv_display_set_rotation(NULL, LV_DISPLAY_ROTATION_90);
 
-
     init_buzzer();
 
     xTaskCreatePinnedToCore(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL, 0);
@@ -179,7 +177,25 @@ extern "C" void app_main() {
         free(data);
     }
 
-    
+
+    // // Check if the image file exists before setting it as the source using LVGL's file system API
+    // lv_fs_file_t f;
+    // lv_fs_res_t res = lv_fs_open(&f, "A:/spiffs/apps/Clock/house-solid.png", LV_FS_MODE_RD);
+    // if (res == LV_FS_RES_OK) {
+    //     lv_fs_close(&f);
+    //     lv_obj_t *img = lv_image_create(lv_screen_active());
+    //     lv_image_set_src(img, "A:/spiffs/apps/Clock/house-solid.png");
+    //     lv_obj_set_pos(img, 120, 120);
+    //     lv_obj_t *label = lv_label_create(lv_screen_active());
+    //     lv_label_set_text(label, "Image found");
+    //     lv_obj_set_pos(label, 100, 120);
+    //     lv_obj_set_style_text_color(label, lv_palette_main(LV_PALETTE_GREY), 0);
+    // } else {
+    //     lv_obj_t *label = lv_label_create(lv_screen_active());
+    //     lv_label_set_text(label, "Image not found");
+    //     lv_obj_set_pos(label, 120, 120);
+    //     lv_obj_set_style_text_color(label, lv_palette_main(LV_PALETTE_GREY), 0); // Set text color to white
+    // }
     // xTaskCreate(
     //     FitnessManager::handle_fitness_task,
     //     "fitness_task",
@@ -203,11 +219,4 @@ extern "C" void app_main() {
     );
 
     AppManager::launchApp("Clock");
-
-    char** files;
-    int count;
-    file_manager_get_files_in_directory("", &files, &count);
-    for (int i = 0; i < count; i++) {
-        ESP_LOGI(TAG, "File: %s", files[i]);    
-    }
 }

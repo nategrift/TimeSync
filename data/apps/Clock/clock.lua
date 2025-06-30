@@ -1,4 +1,5 @@
 local lvgl = require("lvgl")
+local other = require("other")
 
 local root = lvgl.Object {
     w = lvgl.HOR_RES(),
@@ -12,9 +13,15 @@ local root = lvgl.Object {
     border_width = 0,
 }
 
+-- local img = root:Image {
+--     src = "A:/spiffs/apps/Clock/portraitTiny.png",
+--     x = 0,
+--     y = 0,
+-- }
+
 local clock = root:Label {
     text = "Clock",
-    text_color = lvgl.palette.darken(lvgl.palette.RED, 3),
+    text_color = lvgl.palette.RED,
     text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
     align = {
         type = lvgl.ALIGN.TOP_MID,
@@ -35,7 +42,7 @@ local time = root:Label {
 
 local date = root:Label {
     text = "00:00:00",
-    text_color = lvgl.palette.darken(lvgl.palette.GREY, 2),
+    text_color = lvgl.palette.lighten(lvgl.palette.GREY, 2),
     text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
     align = {
         type = lvgl.ALIGN.CENTER,
@@ -70,7 +77,7 @@ screen:onevent(lvgl.EVENT.GESTURE, function (obj, code)
         local press_duration = os.clock() - press_start_time
         if press_duration > 0.8 then
             if indev:get_gesture_dir() == lvgl.DIR.LEFT then
-                openApp("Settings")
+                openApp(other.app_to_open)
             end
         end
     end

@@ -39,7 +39,6 @@ void GraphicsDriver::init() {
 void GraphicsDriver::lvgl_task(void *arg) {
     ESP_LOGI(TAG, "Starting LVGL task");
 
-    TickType_t last_wake_time = xTaskGetTickCount();
     const int target_frame_time_ms = 1000 / 30;
 
     // Debounce variables
@@ -48,23 +47,18 @@ void GraphicsDriver::lvgl_task(void *arg) {
 
     while (1) {
         int screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
-        TickType_t start_time = xTaskGetTickCount();
 
         // Render within a LVGL mutex lock
         LvglMutex::lock();
-        lv_timer_handler();
+        uint32_t time_till_next = lv_timer_handler();
         LvglMutex::unlock();
 
-        // How long did the frame take to render, then minus our tar
-        TickType_t frame_time = xTaskGetTickCount() - start_time;
-        int delay_time_ms = target_frame_time_ms - pdTICKS_TO_MS(frame_time);
-
-        // Ensure a minimum delay of 1 ms to prevent CPU lockup
-        if (delay_time_ms < min_task_delay) {
-            delay_time_ms = min_task_delay;
+        // Ensure a minimum delay to prevent CPU lockup
+        if (time_till_next < min_task_delay) {
+            time_till_next = min_task_delay;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(delay_time_ms));
+        vTaskDelay(pdMS_TO_TICKS(time_till_next));
 
         // Handle debounce after waking up from sleep
         if (is_debouncing) {

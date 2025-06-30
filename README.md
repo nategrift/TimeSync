@@ -17,8 +17,13 @@ To see how the code is designed and the structure behind this TimeSync System, p
 - Current hardware I am using is the ESP-32-WROVER
 - I am using PlatformIO to upload the firemare to the device
 
+- Then click upload
 
-xtensa-esp32-elf-addr2line -pfiaC -e C:\Users\nateg\OneDrive\Documents\GitHub\TimeSync\.pio\build\esp32s3box\firmware.elf 
 
 ### How to upload files to flash
- run `pio run -t uploadfs`
+- open the command `PlatformIO: Open PlatformiO Core CLI`
+- then run `pio run -t uploadfs`
+
+
+## Debug cmds 
+xtensa-esp32-elf-addr2line -pfiaC -e C:\Users\nateg\OneDrive\Documents\GitHub\TimeSync\.pio\build\esp32s3box\firmware.elf 

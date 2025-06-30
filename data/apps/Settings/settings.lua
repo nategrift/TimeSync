@@ -91,7 +91,7 @@ home:onClicked(function()
     openApp("Clock")
 end)
 
-for i = 1, 40 do
+for i = 1, 10 do
     local item = container:Object {
         bg_color = "#444",
         radius = 5,
