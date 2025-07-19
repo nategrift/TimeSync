@@ -31,6 +31,20 @@ static int luavgl_palette_darken(lua_State *L)
   return 1;
 }
 
+static int luavgl_palette_white(lua_State *L)
+{
+  lv_color_t c = lv_color_white();
+  luavgl_pushcolor(L, c);
+  return 1;
+}
+
+static int luavgl_palette_black(lua_State *L)
+{
+  lv_color_t c = lv_color_black();
+  luavgl_pushcolor(L, c);
+  return 1;
+}
+
 static const rotable_Reg palette_constants[] = {
     {"RED",         0,             {.integer = LV_PALETTE_RED}        },
     {"PINK",        0,             {.integer = LV_PALETTE_PINK}       },
@@ -57,6 +71,8 @@ static const rotable_Reg palette_constants[] = {
     {"main",        LUA_TFUNCTION, {luavgl_palette_main}              },
     {"lighten",     LUA_TFUNCTION, {luavgl_palette_lighten}           },
     {"darken",      LUA_TFUNCTION, {luavgl_palette_darken}            },
+    {"white",       LUA_TFUNCTION, {luavgl_palette_white}             },
+    {"black",       LUA_TFUNCTION, {luavgl_palette_black}             },
 
     {0,             0,             {0}                                },
 };

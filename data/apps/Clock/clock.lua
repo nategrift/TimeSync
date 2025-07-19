@@ -1,6 +1,8 @@
 local lvgl = require("lvgl")
+
 local other = require("other")
 
+LVGL_lock()
 local root = lvgl.Object {
     w = lvgl.HOR_RES(),
     h = lvgl.VER_RES(),
@@ -18,18 +20,6 @@ local root = lvgl.Object {
 --     x = 0,
 --     y = 0,
 -- }
-
-local clock = root:Label {
-    text = "Clock",
-    text_color = lvgl.palette.RED,
-    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
-    align = {
-        type = lvgl.ALIGN.TOP_MID,
-        x_ofs = 0,
-        y_ofs = 10,
-    }
-}
-
 
 local time = root:Label {
     text = "--/--/--",
@@ -77,7 +67,11 @@ screen:onevent(lvgl.EVENT.GESTURE, function (obj, code)
         local press_duration = os.clock() - press_start_time
         if press_duration > 0.8 then
             if indev:get_gesture_dir() == lvgl.DIR.LEFT then
-                openApp(other.app_to_open)
+                if other.Launch_App_Selector then
+                    other.Launch_App_Selector()
+                else
+                    openApp("Clock")
+                end
             end
         end
     end
@@ -87,3 +81,11 @@ root:onevent(lvgl.EVENT.PRESSED, function (obj, code)
     press_start_time = os.clock()
 end)
 
+
+LVGL_unlock()
+
+OnClose = function()
+    timer:delete()
+    root:delete()
+    other.OnClose()
+end

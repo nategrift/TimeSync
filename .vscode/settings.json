@@ -85,6 +85,7 @@
         "lua.h": "c",
         "lauxlib.h": "c",
         "bitset": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "text_encoding": "cpp"
     }
 }

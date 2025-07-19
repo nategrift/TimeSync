@@ -18,8 +18,10 @@ extern "C" {
 #include "FileManager.h"
 #include "LVGLMutex.h"
 #include <string>
+#include <cstring>
 #include <time.h>
 #include "app_screen.h"
+
 
 // used to gracefully close the lua state, can't be called directly due to click events being within lvgl tick call
 static bool shouldClose = false;
@@ -45,6 +47,44 @@ int luaClose(lua_State *L) {
     ESP_LOGI(TAG, "Lua state is closing from within Lua script");
     closeLuaApp();
     return 0; 
+}
+
+static lv_obj_t* error_label = nullptr;
+
+void showLuaError(const char* errorMsg) {
+
+    // Remove previous error screen if it exists
+    if (error_label) {
+        lv_obj_del(lv_obj_get_parent(error_label));
+        error_label = nullptr;
+    }
+
+    // Create a full-screen container for the error
+    lv_obj_t* error_screen = lv_obj_create(nullptr); // nullptr creates a new screen
+    lv_obj_set_size(error_screen, LV_HOR_RES, LV_VER_RES);
+    lv_obj_set_style_bg_color(error_screen, lv_color_hex(0x000000), 0); // black background
+
+    // Create the error label in the center
+    error_label = lv_label_create(error_screen);
+    lv_label_set_text(error_label, errorMsg);
+    lv_obj_set_style_text_color(error_label, lv_color_hex(0xFF0000), 0); // red text
+    lv_obj_align(error_label, LV_ALIGN_CENTER, 0, 0);
+
+    // Create the "Settings" button at the bottom center
+    lv_obj_t* settings_btn = lv_button_create(error_screen);
+    lv_obj_set_width(settings_btn, 120);
+    lv_obj_align(settings_btn, LV_ALIGN_BOTTOM_MID, 0, -20);
+
+    lv_obj_t* btn_label = lv_label_create(settings_btn);
+    lv_label_set_text(btn_label, "Settings");
+    lv_obj_center(btn_label);
+
+    lv_obj_add_event_cb(settings_btn, [](lv_event_t* e) {
+        AppManager::launchApp("Settings");
+    }, LV_EVENT_CLICKED, nullptr);
+
+    // Load the error screen
+    lv_scr_load(error_screen);
 }
 
 void configureLuaState(lua_State *L) {
@@ -75,6 +115,16 @@ void configureLuaState(lua_State *L) {
 
     lua_register(L, "exit", luaClose);
 
+    lua_pushcfunction(L, [](lua_State *L) -> int {
+        if (appConfig && !appConfig->name.empty()) {
+            lua_pushstring(L, appConfig->name.c_str());
+        } else {
+            lua_pushnil(L);
+        }
+        return 1;
+    });
+    lua_setglobal(L, "currentApp");
+
     lua_pushcfunction(L, [](lua_State *L) {
         const char* appName = luaL_checkstring(L, 1);
         if (appName) {
@@ -83,6 +133,20 @@ void configureLuaState(lua_State *L) {
         return 0;
     });    
     lua_setglobal(L, "openApp");
+
+    auto lvgl_unlock = [](lua_State *L) -> int {
+        LvglMutex::unlock();
+        return 0;
+    };
+    lua_pushcfunction(L, lvgl_unlock);
+    lua_setglobal(L, "LVGL_unlock");
+
+    auto lvgl_lock = [](lua_State *L) -> int {
+        LvglMutex::lock();
+        return 0;
+    };
+    lua_pushcfunction(L, lvgl_lock);
+    lua_setglobal(L, "LVGL_lock");
 
     // Append restriction logic to io.open
     lua_getglobal(L, "io");
@@ -131,16 +195,16 @@ void runLuaScriptTask(void *pvParameters) {
     while (true) {
         ESP_LOGI(TAG, "LUA LOOP");
         if (shouldClose && appOpen) {
+            LvglMutex::lock();
             ESP_LOGI(TAG, "Closing Lua state");
             if (L != nullptr) {
                 signalLuaClose();
-                LvglMutex::lock();
                 lua_close(L);
-                LvglMutex::unlock();
             }
             if (luaCode != nullptr) {
                 free(luaCode);
             }
+            LvglMutex::unlock();
             shouldClose = false;
             appOpen = false;
         }
@@ -153,8 +217,11 @@ void runLuaScriptTask(void *pvParameters) {
             appOpen = true;
 
             if (luaCode != nullptr && luaL_dostring(L, luaCode) != LUA_OK) {
-                printf("Error: %s\n", lua_tostring(L, -1));
-                appOpen = false;
+                const char* err = lua_tostring(L, -1);
+                printf("Error: %s\n", err);
+                LvglMutex::lock();
+                showLuaError(err);
+                LvglMutex::unlock();
             }
         }
 

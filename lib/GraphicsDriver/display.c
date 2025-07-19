@@ -124,15 +124,6 @@ void lvglDisplayConfig(void)
     assert(buf2);
     lv_display_set_buffers(disp_drv, buf1, buf2, buff_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    // ESP_LOGI(TAG, "Register display driver to LVGL");
-    // (&disp_drv);
-    // disp_drv.hor_res = EXAMPLE_LCD_H_RES;
-    // disp_drv.ver_res = EXAMPLE_LCD_V_RES;
-    // disp_drv.flush_cb = example_lvgl_flush_cb;
-    // disp_drv.drv_update_cb = example_lvgl_port_update_callback;
-    // disp_drv.draw_buf = &disp_buf;
-    // disp_drv.user_data = panel_handle;
-    // lv_disp_t *disp = lv_disp_drv_register(&disp_drv);
     lv_display_set_user_data(disp_drv, panel_handle);
     
     lv_display_set_flush_cb(disp_drv, example_lvgl_flush_cb);

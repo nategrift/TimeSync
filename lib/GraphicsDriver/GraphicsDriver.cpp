@@ -27,7 +27,7 @@ void GraphicsDriver::init() {
     LvglMutex::init();
 
     // // Create LVGL task
-    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 128000, NULL, 4, NULL, 0);
+    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 128000, NULL, 4, NULL, 1);
     esp_task_wdt_config_t twdt_config = {
         .timeout_ms = 5000,                // 5 second timeout
         .idle_core_mask = (1 << 0),        // Watch core 0

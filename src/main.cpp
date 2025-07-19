@@ -81,7 +81,7 @@ extern "C" void app_main() {
 
     // setup GPIO for the awake manager
     AwakeManager::init();
-    VibrationDriver::init();
+    // VibrationDriver::init();
 
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -154,7 +154,7 @@ extern "C" void app_main() {
 
     lv_display_set_rotation(NULL, LV_DISPLAY_ROTATION_90);
 
-    init_buzzer();
+    // init_buzzer();
 
     xTaskCreatePinnedToCore(&TimeEventsManager::checkExpiringEventsTask, "checkExpiringEventsTask", 8000, NULL, 5, NULL, 0);
 
