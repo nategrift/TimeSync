@@ -164,6 +164,7 @@ lvgl.BUILTIN_FONT = {
     SIMSUN_16_CJK = 0,
     UNSCII_8 = 0,
     UNSCII_16 = 0,
+    NERD_FONT = 0,
 }
 
 --- @enum LABEL

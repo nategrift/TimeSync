@@ -149,8 +149,8 @@ static const struct {
     {46, &lv_font_montserrat_46},
 #endif
 
-#if LV_FONT_MONTSERRAT_48
-    {48, &lv_font_montserrat_48},
+#if LV_FONT_NERD_FONT
+    {48, &nerd_font},
 #endif
 };
 

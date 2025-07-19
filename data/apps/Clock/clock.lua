@@ -24,7 +24,7 @@ local root = lvgl.Object {
 local time = root:Label {
     text = "--/--/--",
     text_color = "#fff",
-    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_30,
+    text_font = lvgl.BUILTIN_FONT.NERD_FONT,
     text_align = lvgl.ALIGN.CENTER,
     align = lvgl.ALIGN.CENTER
 }
@@ -33,16 +33,16 @@ local time = root:Label {
 local date = root:Label {
     text = "00:00:00",
     text_color = lvgl.palette.lighten(lvgl.palette.GREY, 2),
-    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_14,
+    text_font = lvgl.BUILTIN_FONT.MONTSERRAT_16,
     align = {
         type = lvgl.ALIGN.CENTER,
         x_ofs = 0,
-        y_ofs = 25,
+        y_ofs = 30,
     }
 }
 
 local function update_time()
-    local timeString = tostring(os.date("%I:%M:%S %p"))
+    local timeString = tostring(os.date("%I:%M"))
     local dateString = tostring(os.date("%a %b %d"))
     time.text = timeString
     date.text = dateString
@@ -54,7 +54,6 @@ local timer = lvgl.Timer({
     repeat_count = -1,
     cb = function()
         update_time()
-
     end,
     paused = false
 })
@@ -78,14 +77,16 @@ screen:onevent(lvgl.EVENT.GESTURE, function (obj, code)
 end)
 
 root:onevent(lvgl.EVENT.PRESSED, function (obj, code)
-    press_start_time = os.clock()
+    -- press_start_time = os.clock()
+    if other.Launch_App_Selector then
+        other.Launch_App_Selector()
+    end
 end)
 
 
 LVGL_unlock()
 
-OnClose = function()
-    timer:delete()
-    root:delete()
-    other.OnClose()
-end
+-- OnClose = function()
+--     timer:delete()
+--     other.OnClose()
+-- end

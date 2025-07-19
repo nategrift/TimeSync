@@ -1,7 +1,7 @@
 local M = {}
 
 function M.Launch_App_Selector()
-    M.root = lvgl.Object({
+    local root = lvgl.Object({
         w = lvgl.HOR_RES(),
         h = lvgl.VER_RES(),
         x = 0,
@@ -33,7 +33,7 @@ function M.Launch_App_Selector()
         local icon_x = center_x + (math.cos(angle) * radius) - icon_offset
         local icon_y = center_y + (math.sin(angle) * radius) - icon_offset
 
-        local btn = M.root:Object {
+        local btn = root:Object {
             x = icon_x,
             y = icon_y,
             w = icon_size,
@@ -54,7 +54,7 @@ function M.Launch_App_Selector()
 
         -- Animation parameters
         local delay = (i - 1) * (700 / #apps) + 100
-        M.anim = img:Anim {
+        img:Anim {
             run = true,
             start_value = 0,
             end_value = 100,
@@ -76,7 +76,7 @@ function M.Launch_App_Selector()
         if (current_app == app) then
             local indicator_x = center_x + (math.cos(angle) * indicator_radius) - indicator_size_radius
             local indicator_y = center_y + (math.sin(angle) * indicator_radius) - indicator_size_radius
-            local indicator = M.root:Object {
+            local indicator = root:Object {
                 x = indicator_x,
                 y = indicator_y,
                 w = indicator_size_radius + indicator_size_radius,
@@ -89,7 +89,7 @@ function M.Launch_App_Selector()
                 opa = lvgl.OPA(0),
             }
 
-            M.anim2 = indicator:Anim {
+            indicator:Anim {
                 run = true,
                 start_value = 0,
                 end_value = 100,
@@ -103,7 +103,7 @@ function M.Launch_App_Selector()
         end
     end
 
-    local time = M.root:Label {
+    local time = root:Label {
         text = "--:--",
         text_color = "#fff",
         text_font = lvgl.BUILTIN_FONT.MONTSERRAT_24,
@@ -117,32 +117,30 @@ function M.Launch_App_Selector()
     end
     update_time()
 
-    M.timer = lvgl.Timer({
+    lvgl.Timer({
         period = 1000,
         repeat_count = -1,
         cb = function()
             update_time()
-
         end,
         paused = false
     })
-
 end
 
-function M.OnClose()
-    if M.timer then
-        M.timer:delete()
-    end
-    if M.anim then
-        M.anim:delete()
-    end
-    if M.anim2 then
-        M.anim2:delete()
-    end
-    if M.root then
-        M.root:delete()
-    end
-end
+-- function M.OnClose()
+--     if M.timer then
+--         M.timer:delete()
+--     end
+--     if M.anim then
+--         M.anim:delete()
+--     end
+--     if M.anim2 then
+--         M.anim2:delete()
+--     end
+--     if M.root then
+--         M.root:delete()
+--     end
+-- end
 
 return M
 

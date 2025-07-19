@@ -1,6 +1,8 @@
 local M = {}
 
 function M.Launch_App_Selector()
+    LVGL_lock()  -- CRITICAL: Lock LVGL mutex before creating UI elements
+    
     local root = lvgl.Object({
         w = lvgl.HOR_RES(),
         h = lvgl.VER_RES(),
@@ -121,12 +123,13 @@ function M.Launch_App_Selector()
         period = 1000,
         repeat_count = -1,
         cb = function()
+            LVGL_lock()
             update_time()
-
+            LVGL_unlock()
         end,
         paused = false
     })
-
+    LVGL_unlock() -- CRITICAL: Unlock LVGL mutex after creating UI elements
 end
 
 return M

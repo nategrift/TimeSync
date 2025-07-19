@@ -457,6 +457,14 @@ static const rotable_Reg builtin_font_const_table[] = {
      .ptr = &lv_font_unscii_16,
      },
 #endif
+
+#if LV_FONT_NERD_FONT
+    {
+     .name = "NERD_FONT",
+     .type = LUA_TLIGHTUSERDATA,
+     .ptr = &nerd_font,
+     },
+#endif
 };
 
 static const rotable_Reg scr_load_anim_const_table[] = {
