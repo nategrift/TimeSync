@@ -106,6 +106,10 @@ void AwakeManager::wakeDevice(int before_sleep_time) {
 
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();
+    
+    // Wait for display to be ready after reload
+    vTaskDelay(pdMS_TO_TICKS(100));
+    
     resume_lvgl_tick_timer();
     resume_all_lvgl_timers();
 
@@ -125,4 +129,7 @@ void AwakeManager::wakeDevice(int before_sleep_time) {
     // set time right away
     TimeManager::updateTime();
     TimeManager::serializeTime();
+    
+    // Give LVGL time to process before any notifications are shown
+    vTaskDelay(pdMS_TO_TICKS(50));
 }

@@ -1,6 +1,5 @@
 local lvgl = require("lvgl")
-
-local other = require("other")
+local ts_ui = require("ts_ui")
 
 LVGL_lock()
 local root = lvgl.Object {
@@ -58,35 +57,23 @@ local timer = lvgl.Timer({
     paused = false
 })
 
+-- Gesture on screen for swipe detection
 local screen = lvgl.disp.get_scr_act()
-local press_start_time = nil
-screen:onevent(lvgl.EVENT.GESTURE, function (obj, code)
+screen:onevent(lvgl.EVENT.GESTURE, function(obj, code)
     local indev = lvgl.indev.get_act()
-    if press_start_time then
-        local press_duration = os.clock() - press_start_time
-        if press_duration > 0.8 then
-            if indev:get_gesture_dir() == lvgl.DIR.LEFT then
-                if other.Launch_App_Selector then
-                    other.Launch_App_Selector()
-                else
-                    openApp("Clock")
-                end
-            end
-        end
+    local dir = indev:get_gesture_dir()
+    if dir == lvgl.DIR.LEFT or dir == lvgl.DIR.RIGHT then
+        ts_ui.app_selector.show()
     end
 end)
 
-root:onevent(lvgl.EVENT.PRESSED, function (obj, code)
-    -- press_start_time = os.clock()
-    if other.Launch_App_Selector then
-        other.Launch_App_Selector()
-    end
+root:onevent(lvgl.EVENT.PRESSED, function(obj, code)
+    ts_ui.app_selector.show()
 end)
-
 
 LVGL_unlock()
 
--- OnClose = function()
---     timer:delete()
---     other.OnClose()
--- end
+OnClose = function()
+    timer:delete()
+    root:delete()
+end

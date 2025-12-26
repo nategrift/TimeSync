@@ -20,13 +20,13 @@ void VibrationDriver::init(gpio_num_t pin) {
 
 void VibrationDriver::quickVibration(uint32_t duration_ms) {
     stopVibration = false;
-    xTaskCreatePinnedToCore(vibrationTask, "Quick Vibration", 2048, (void*)duration_ms, 5, &vibrationTaskHandle, 0);
+    xTaskCreatePinnedToCore(vibrationTask, "Quick Vibration", 2048, (void*)duration_ms, 5, &vibrationTaskHandle, 1);
 }
 
 void VibrationDriver::patternVibration(const std::vector<uint32_t>& pattern) {
     stopVibration = false;
     std::vector<uint32_t>* patternCopy = new std::vector<uint32_t>(pattern);
-    xTaskCreatePinnedToCore(patternVibrationTask, "Pattern Vibration", 2048, (void*)patternCopy, 5, &patternVibrationTaskHandle, 0);
+    xTaskCreatePinnedToCore(patternVibrationTask, "Pattern Vibration", 2048, (void*)patternCopy, 5, &patternVibrationTaskHandle, 1);
 }
 
 void VibrationDriver::vibrationTask(void* pvParameters) {

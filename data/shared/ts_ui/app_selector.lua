@@ -1,6 +1,15 @@
+-- ts_ui.app_selector
+-- App selector overlay for TimeSync apps
+
+local lvgl = require("lvgl")
+
 local M = {}
 
-function M.Launch_App_Selector()
+--- Launch the circular app selector overlay
+-- Shows all installed apps in a ring around a central clock display
+-- NOTE: This is called from event callbacks (gestures, presses) which run inside
+-- lv_timer_handler(). The mutex is already held, so we do NOT lock here.
+function M.show()
     local root = lvgl.Object({
         w = lvgl.HOR_RES(),
         h = lvgl.VER_RES(),
@@ -20,8 +29,8 @@ function M.Launch_App_Selector()
     local center_y = lvgl.VER_RES() // 2
     local radius = 180 / 2
 
-    local indicator_radius = 60 -- dia of 60
-    local indicator_size_radius = 2 -- total of 2
+    local indicator_radius = 60
+    local indicator_size_radius = 2
 
     local icon_size = 50
     local icon_offset = icon_size / 2
@@ -52,7 +61,7 @@ function M.Launch_App_Selector()
             opa = lvgl.OPA(0),
         }
 
-        -- Animation parameters
+        -- Staggered fade-in animation
         local delay = (i - 1) * (700 / #apps) + 100
         img:Anim {
             run = true,
@@ -61,8 +70,7 @@ function M.Launch_App_Selector()
             duration = 200,
             delay = delay,
             path = "ease_out",
-            exec_cb = function (obj, value)
-
+            exec_cb = function(obj, value)
                 obj.opa = lvgl.OPA(value)
             end,
         }
@@ -71,9 +79,8 @@ function M.Launch_App_Selector()
             openApp(app)
         end)
 
-
-
-        if (current_app == app) then
+        -- Show indicator for current app
+        if current_app == app then
             local indicator_x = center_x + (math.cos(angle) * indicator_radius) - indicator_size_radius
             local indicator_y = center_y + (math.sin(angle) * indicator_radius) - indicator_size_radius
             local indicator = root:Object {
@@ -96,51 +103,24 @@ function M.Launch_App_Selector()
                 duration = 200,
                 delay = delay + 100,
                 path = "ease_out",
-                exec_cb = function (obj, value)
+                exec_cb = function(obj, value)
                     obj.opa = lvgl.OPA(value)
                 end
             }
         end
     end
 
-    local time = root:Label {
-        text = "--:--",
+    -- Central time display (no timer needed - overlay is momentary)
+    local time_label = root:Label {
+        text = tostring(os.date("%I:%M")),
         text_color = "#fff",
         text_font = lvgl.BUILTIN_FONT.MONTSERRAT_24,
         text_align = lvgl.ALIGN.CENTER,
         align = lvgl.ALIGN.CENTER
     }
-
-    local function update_time()
-        local timeString = tostring(os.date("%I:%M"))
-        time.text = timeString
-    end
-    update_time()
-
-    lvgl.Timer({
-        period = 1000,
-        repeat_count = -1,
-        cb = function()
-            update_time()
-        end,
-        paused = false
-    })
+    
+    return root
 end
-
--- function M.OnClose()
---     if M.timer then
---         M.timer:delete()
---     end
---     if M.anim then
---         M.anim:delete()
---     end
---     if M.anim2 then
---         M.anim2:delete()
---     end
---     if M.root then
---         M.root:delete()
---     end
--- end
 
 return M
 

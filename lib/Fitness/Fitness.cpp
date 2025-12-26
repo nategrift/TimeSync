@@ -113,7 +113,7 @@ void Fitness::launch() {
         this,               // Parameter passed to task (this pointer)
         5,                  // Task priority
         &stepsTaskHandle,   // Task handle
-        0                   // Core ID
+        1                   // Core ID
     );
 }
 

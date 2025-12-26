@@ -213,7 +213,7 @@ void WifiManager::wifiEventHandler(void* arg, esp_event_base_t event_base, int32
                 self->reset();
             }
             vTaskDelete(NULL);
-        }, "wifi_reconnect", 4096, nullptr, 5, nullptr, 0);
+        }, "wifi_reconnect", 4096, nullptr, 5, nullptr, 1);
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "Got IP address: " IPSTR, IP2STR(&event->ip_info.ip));

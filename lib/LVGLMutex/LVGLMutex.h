@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "esp_log.h"
 
 class LvglMutex {
 public:
@@ -15,6 +16,7 @@ public:
 
     // Lock the mutex
     static void lock() {
+        // ESP_LOGI("LVGLMutex", "LOCK from: %s", location);  // Uncomment for debugging
         if (mutex != nullptr) {
             xSemaphoreTake(mutex, portMAX_DELAY);
         }

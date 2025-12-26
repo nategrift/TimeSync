@@ -92,9 +92,8 @@ void TimeManager::getTime(int &hour, int &minute, int &second) {
 void TimeManager::timeTask(void* params) {
     int serializeCount = SERIALIZE_FREQUENCY / TIME_FREQUENCY;
     while (1) {
-        LvglMutex::lock();
+        // Note: updateTime() doesn't do LVGL operations, no mutex needed
         TimeManager::updateTime();
-        LvglMutex::unlock();
         
         // if we should serialize, do so
         if (serializeCount <= 0) {

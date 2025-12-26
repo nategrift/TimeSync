@@ -27,6 +27,7 @@ void GraphicsDriver::init() {
     LvglMutex::init();
 
     // // Create LVGL task
+    // MUST be on Core 0 - LVGL callbacks invoke Lua code, and Lua state is on Core 0
     xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 128000, NULL, 4, NULL, 0);
     esp_task_wdt_config_t twdt_config = {
         .timeout_ms = 5000,                // 5 second timeout
@@ -44,9 +45,18 @@ void GraphicsDriver::lvgl_task(void *arg) {
     // Debounce variables
     bool is_debouncing = false;
     TickType_t debounce_end_time = 0;
+    
+    // Cache screen timeout - refresh every 5 seconds instead of every frame
+    int screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
+    int config_refresh_counter = 0;
+    const int CONFIG_REFRESH_INTERVAL = 150;  // ~5 seconds at 30 FPS
 
     while (1) {
-        int screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
+        // Refresh config periodically instead of every frame
+        if (++config_refresh_counter >= CONFIG_REFRESH_INTERVAL) {
+            screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
+            config_refresh_counter = 0;
+        }
 
         // Render within a LVGL mutex lock
         LvglMutex::lock();

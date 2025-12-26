@@ -8,61 +8,61 @@ static const char* TAG = "TimeEventsManager";
 
 std::vector<TimeEvent> TimeEventsManager::events;
 
-static int8_t eventCounter = 0; // Add this line
+static int8_t eventCounter = 0;
 
 void TimeEventsManager::init() {
     deserializeTimeEvents();
 }
 
-int8_t TimeEventsManager::addTimeEvent(EventType type, time_t endTime, const std::string& label) {
+int8_t TimeEventsManager::addTimeEvent(EventType type, time_t expireTime, const std::string& label, const std::string& appName) {
     TimeEvent newEvent;
-    newEvent.id = generateUid(); // Modify this line
+    newEvent.id = generateUid();
     newEvent.type = type;
-    newEvent.startTime = time(nullptr);
-    newEvent.endTime = endTime;
+    newEvent.expireTime = expireTime;
     newEvent.label = label;
-    newEvent.active = true;
+    newEvent.appName = appName;
 
     events.push_back(newEvent);
     sortEventsByTime();
     serializeTimeEvents();
 
+    ESP_LOGI(TAG, "Added time event: ID=%d, Type=%d, Label='%s', AppName='%s'", 
+             newEvent.id, static_cast<int>(type), label.c_str(), appName.c_str());
+
     return newEvent.id;
 }
 
-bool TimeEventsManager::cancelEvent(int8_t id) {
+bool TimeEventsManager::deleteTimeEvent(int8_t id) {
     auto it = std::find_if(events.begin(), events.end(),
                            [&id](const TimeEvent& event) { return event.id == id; });
     if (it != events.end()) {
         events.erase(it);
         serializeTimeEvents();
+        ESP_LOGI(TAG, "Deleted time event: ID=%d", id);
         return true;
     }
+    ESP_LOGW(TAG, "Time event not found: ID=%d", id);
     return false;
 }
 
-bool TimeEventsManager::editTimeEvent(int8_t id, time_t endTime, const std::string& label) {
-    auto it = std::find_if(events.begin(), events.end(),
-                           [&id](const TimeEvent& event) { return event.id == id; });
-    if (it != events.end()) {
-        it->endTime = endTime;
-        it->label = label;
-        sortEventsByTime();
-        serializeTimeEvents();
-        return true;
-    }
-    return false;
+void TimeEventsManager::clearAllEventsByType(EventType type) {
+    events.erase(std::remove_if(events.begin(), events.end(),
+                                [type](const TimeEvent& event) { return event.type == type; }),
+                 events.end());
+    serializeTimeEvents();
+    ESP_LOGI(TAG, "Cleared all events of type: %d", static_cast<int>(type));
 }
 
-bool TimeEventsManager::toggleTimeEvent(int8_t id) {
+TimeEvent TimeEventsManager::getTimeEventById(int8_t id) {
     auto it = std::find_if(events.begin(), events.end(),
                            [&id](const TimeEvent& event) { return event.id == id; });
     if (it != events.end()) {
-        it->active = !it->active;
-        serializeTimeEvents();
-        return true;
+        return *it;
     }
-    return false;
+    // Return an empty TimeEvent with id = -1 to indicate not found
+    TimeEvent empty;
+    empty.id = -1;
+    return empty;
 }
 
 std::vector<TimeEvent> TimeEventsManager::getAllEventsByType(EventType type) {
@@ -72,51 +72,31 @@ std::vector<TimeEvent> TimeEventsManager::getAllEventsByType(EventType type) {
     return result;
 }
 
-std::vector<TimeEvent> TimeEventsManager::getAllActiveEventsByType(EventType type) {
-    std::vector<TimeEvent> result;
-    std::copy_if(events.begin(), events.end(), std::back_inserter(result),
-                 [type](const TimeEvent& event) { return event.type == type && event.active; });
-    return result;
-}
-
-void TimeEventsManager::clearAllEventsByType(EventType type) {
-    events.erase(std::remove_if(events.begin(), events.end(),
-                                [type](const TimeEvent& event) { return event.type == type; }),
-                 events.end());
-    serializeTimeEvents();
-}
-
-TimeEvent TimeEventsManager::getTimeEventById(int8_t id) {
-    auto it = std::find_if(events.begin(), events.end(),
-                           [&id](const TimeEvent& event) { return event.id == id; });
-    if (it != events.end()) {
-        return *it;
-    }
-    return TimeEvent(); // Return an empty TimeEvent if not found
-}
-
 std::vector<TimeEvent> TimeEventsManager::getExpiredTimeEvents() {
     std::vector<TimeEvent> expiredEvents;
     time_t now = time(nullptr);
     std::copy_if(events.begin(), events.end(), std::back_inserter(expiredEvents),
-                 [now](const TimeEvent& event) { return event.active && event.endTime <= now; });
+                 [now](const TimeEvent& event) { return event.expireTime <= now; });
     return expiredEvents;
 }
 
 void TimeEventsManager::serializeTimeEvents() {
     std::stringstream ss;
     for (const auto& event : events) {
-        ss << event.id << "," << static_cast<int>(event.type) << "," << event.startTime << ","
-           << event.endTime << "," << event.label << "," << (event.active ? "1" : "0") << "\n";
+        ss << static_cast<int>(event.id) << "," 
+           << static_cast<int>(event.type) << "," 
+           << event.expireTime << ","
+           << event.label << "," 
+           << event.appName << "\n";
     }
-    bool success = file_manager_write_data("TimeEvents", "events.csv", ss.str().c_str());
+    bool success = file_manager_write_data("TimeEvents", "events_v2.csv", ss.str().c_str());
     if (!success) {
         ESP_LOGE(TAG, "Failed to serialize time events");
     }
 }
 
 void TimeEventsManager::deserializeTimeEvents() {
-    char* data = file_manager_read_data("TimeEvents", "events.csv");
+    char* data = file_manager_read_data("TimeEvents", "events_v2.csv");
     if (data == NULL) {
         ESP_LOGW(TAG, "No time events data found");
         return;
@@ -135,20 +115,17 @@ void TimeEventsManager::deserializeTimeEvents() {
 
         TimeEvent event;
         std::istringstream lineStream(line);
-        std::string idStr, typeStr, startTimeStr, endTimeStr, activeStr;
+        std::string idStr, typeStr, expireTimeStr;
 
         if (std::getline(lineStream, idStr, ',') &&
             std::getline(lineStream, typeStr, ',') &&
-            std::getline(lineStream, startTimeStr, ',') &&
-            std::getline(lineStream, endTimeStr, ',') &&
+            std::getline(lineStream, expireTimeStr, ',') &&
             std::getline(lineStream, event.label, ',') &&
-            std::getline(lineStream, activeStr)) {
+            std::getline(lineStream, event.appName)) {
 
-            event.id = static_cast<int8_t>(std::stoi(idStr)); // Modify this line
+            event.id = static_cast<int8_t>(std::stoi(idStr));
             event.type = static_cast<EventType>(std::stoi(typeStr));
-            event.startTime = std::stoll(startTimeStr);
-            event.endTime = std::stoll(endTimeStr);
-            event.active = (activeStr == "1");
+            event.expireTime = std::stoll(expireTimeStr);
             events.push_back(event);
 
             // Update eventCounter to ensure unique IDs
@@ -164,27 +141,26 @@ void TimeEventsManager::deserializeTimeEvents() {
     ESP_LOGI(TAG, "Deserialized %zu time events", events.size());
 }
 
-// Add this new method to the TimeEventsManager class
 bool TimeEventsManager::isValidCsvLine(const std::string& line) {
     std::istringstream lineStream(line);
     std::string field;
     int fieldCount = 0;
 
-    while (std::getline(lineStream, field, ',') && fieldCount <= 6) {
+    while (std::getline(lineStream, field, ',') && fieldCount <= 5) {
         fieldCount++;
     }
 
-    // A valid line should have 6 fields: id, type, startTime, endTime, label, active
-    return fieldCount == 6;
+    // A valid line should have 5 fields: id, type, expireTime, label, appName
+    return fieldCount == 5;
 }
 
 int8_t TimeEventsManager::generateUid() {
-    return eventCounter++; // Modify this line
+    return eventCounter++;
 }
 
 void TimeEventsManager::sortEventsByTime() {
     std::sort(events.begin(), events.end(),
-              [](const TimeEvent& a, const TimeEvent& b) { return a.endTime < b.endTime; });
+              [](const TimeEvent& a, const TimeEvent& b) { return a.expireTime < b.expireTime; });
 }
 
 void TimeEventsManager::checkExpiringEventsTask(void* pvParameters) {
@@ -200,18 +176,26 @@ bool TimeEventsManager::checkAndNotifyExpiredEvents() {
     bool notificationSent = false;
 
     for (const auto& event : expiredEvents) {
-
-        // check if notification is already sent
+        // Check if notification is already sent
         if (NotificationManager::isNotificationSent(event.id)) {
             continue;
         }
 
+        std::string title;
+        if (event.type == EventType::TIMER) {
+            title = "Timer";
+        } else if (event.type == EventType::ALARM) {
+            title = "Alarm";
+        } else {
+            title = "Event";
+        }
+
         NotificationManager::createNotification(
             event.id,
-            "Event Expired", 
+            title, 
             event.label, 
             [event]() {
-                TimeEventsManager::cancelEvent(event.id);
+                TimeEventsManager::deleteTimeEvent(event.id);
             }, 
             false
         );

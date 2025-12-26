@@ -75,13 +75,15 @@ void Timer::launch() {
 }
 
 bool Timer::getTimer(TimeEvent& timeEvent) {
-    std::vector<TimeEvent> activeEvents = TimeEventsManager::getAllActiveEventsByType(EventType::TIMER);
-    if (activeEvents.empty()) {
-        return false;
-    } else {
-        timeEvent = activeEvents[0];
-        return true;
-    }
+    // DEPRECATED: Old C++ Timer app - use Lua Timer app instead
+    // std::vector<TimeEvent> activeEvents = TimeEventsManager::getAllActiveEventsByType(EventType::TIMER);
+    // if (activeEvents.empty()) {
+    //     return false;
+    // } else {
+    //     timeEvent = activeEvents[0];
+    //     return true;
+    // }
+    return false;
 }
 
 bool Timer::isTimerRunning() {
@@ -128,19 +130,20 @@ void Timer::updateTimerDisplay() {
 }
 
 void Timer::startTimer() {
-    char event_description[32];
-    snprintf(event_description, sizeof(event_description), "Timer %d s", default_seconds);
-
-    TimeEventsManager::addTimeEvent(EventType::TIMER, time(nullptr) + default_seconds, event_description);
+    // DEPRECATED: Old C++ Timer app - use Lua Timer app instead
+    // char event_description[32];
+    // snprintf(event_description, sizeof(event_description), "Timer %d s", default_seconds);
+    // TimeEventsManager::addTimeEvent(EventType::TIMER, time(nullptr) + default_seconds, event_description, "Timer");
 
     updateTimerDisplay();
 }
 
 void Timer::stopTimer() {
-    TimeEvent timeEvent;
-    if (getTimer(timeEvent)) {
-        TimeEventsManager::cancelEvent(timeEvent.id);
-    }
+    // DEPRECATED: Old C++ Timer app - use Lua Timer app instead
+    // TimeEvent timeEvent;
+    // if (getTimer(timeEvent)) {
+    //     TimeEventsManager::deleteTimeEvent(timeEvent.id);
+    // }
     updateTimerDisplay();
 }
 
@@ -203,16 +206,18 @@ void Timer::showSetTimerDialog() {
 }
 
 void Timer::handleTimeUpdate(const struct tm& timeinfo) {
-    TimeEvent timeEvent;
-    bool timerRunning = getTimer(timeEvent);
-    time_t currentTime = mktime(const_cast<struct tm*>(&timeinfo));
+    // DEPRECATED: Old C++ Timer app - use Lua Timer app instead
+    // TimeEvent timeEvent;
+    // bool timerRunning = getTimer(timeEvent);
+    // time_t currentTime = mktime(const_cast<struct tm*>(&timeinfo));
+    //
+    // if (timerRunning && timeEvent.expireTime > currentTime) {
+    //     time_t eventEndTime = timeEvent.expireTime;
+    //     remainingSeconds = difftime(eventEndTime, currentTime);
+    // } else {
+    //     remainingSeconds = default_seconds;
+    // }
 
-    if (timerRunning && timeEvent.endTime > currentTime) {
-        time_t eventEndTime = timeEvent.endTime;
-        remainingSeconds = difftime(eventEndTime, currentTime);
-    } else {
-        remainingSeconds = default_seconds;
-    }
-
+    remainingSeconds = default_seconds;
     updateTimerDisplay();
 }
