@@ -45,6 +45,8 @@ void AppManager::loadAppsFromDisk() {
                             } else {
                                 appConfig.entry_point = std::string("apps/") + value;
                             }
+                        } else if (strcmp(key, "primary_color") == 0) {
+                            appConfig.primary_color = value;
                         }
                     }
                     line = strtok(nullptr, "\n");

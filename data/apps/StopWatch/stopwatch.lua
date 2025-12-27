@@ -3,7 +3,7 @@ local ts_ui = require("ts_ui")
 local colors = ts_ui.colors
 
 -- Stopwatch app primary color
-local primary_color = "#1ABC9C"
+local primary_color = colors.primary
 
 -- Timer update interval in milliseconds
 local UPDATE_INTERVAL = 100

@@ -3,7 +3,7 @@ local ts_ui = require("ts_ui")
 local colors = ts_ui.colors
 
 -- Calculator app accent color
-local CALC_PRIMARY = "#9C20DA"
+local CALC_PRIMARY = colors.primary
 -- Active operator color (darker)
 local OP_ACTIVE = "#5A6A78"
 

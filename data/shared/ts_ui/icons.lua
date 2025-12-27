@@ -37,6 +37,7 @@ M.battery_3 = "\xEF\x89\x81"
 M.battery_2 = "\xEF\x89\x82"
 M.battery_1 = "\xEF\x89\x83"
 M.battery_empty = "\xEF\x89\x84"
+M.charge = "\xEF\x83\xA7"
 
 -- Misc
 M.bell = "\xEF\x83\xB3"

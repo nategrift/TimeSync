@@ -28,7 +28,8 @@ void GraphicsDriver::init() {
 
     // // Create LVGL task
     // MUST be on Core 0 - LVGL callbacks invoke Lua code, and Lua state is on Core 0
-    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 128000, NULL, 4, NULL, 0);
+    // Reduced from 128KB to 32KB - 128KB was excessive and consuming internal RAM
+    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 32768, NULL, 4, NULL, 0);
     esp_task_wdt_config_t twdt_config = {
         .timeout_ms = 5000,                // 5 second timeout
         .idle_core_mask = (1 << 0),        // Watch core 0

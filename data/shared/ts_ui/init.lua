@@ -42,6 +42,8 @@ M.roller_picker = lazy_require("roller_picker")
 M.bool_picker = lazy_require("bool_picker")
 M.action_picker = lazy_require("action_picker")
 M.notification = lazy_require("notification")
+M.list = lazy_require("list")
+M.sub_pick = lazy_require("sub_pick")
 
 return M
 

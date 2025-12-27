@@ -3,7 +3,7 @@ local ts_ui = require("ts_ui")
 local colors = ts_ui.colors
 
 -- Timer app primary color
-local primary_color = "#1AB7DD"
+local primary_color = colors.primary
 
 -- Event type constants
 local EVENT_TYPE_TIMER = 1

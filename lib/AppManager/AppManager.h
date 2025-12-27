@@ -11,6 +11,7 @@ struct AppConfig {
     std::string version;
     std::string author;
     std::string entry_point;
+    std::string primary_color;  // Hex color like "E9444C"
 };
 
 class AppManager {

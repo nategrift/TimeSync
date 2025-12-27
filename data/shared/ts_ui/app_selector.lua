@@ -35,7 +35,7 @@ function M.show()
     local icon_size = 50
     local icon_offset = icon_size / 2
 
-    local current_app = currentApp() or "Clock"
+    local current_app = (currentApp and currentApp.name and currentApp.name()) or "Clock"
 
     for i, app in ipairs(apps) do
         local angle = (i - 1) * (2 * math.pi / #apps) - math.pi / 2

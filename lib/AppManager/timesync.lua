@@ -19,9 +19,18 @@ end
 function openApp(name)
 end
 
--- Returns the current app name
+--- Current app info table
+--- @class currentApp
+currentApp = {}
+
+--- Returns the current app name
 --- @return string
-function currentApp()
+function currentApp.name()
+end
+
+--- Returns the current app's primary color (e.g., "#E9444C")
+--- @return string
+function currentApp.primaryColor()
 end
 
 ------------------------------------
