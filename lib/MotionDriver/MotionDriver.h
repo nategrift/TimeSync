@@ -3,7 +3,7 @@
 #include "driver/i2c.h"
 #include "esp_err.h"
 
-#define QMI8658_I2C_ADDR 0x6B
+#define QMI8658_I2C_ADDR 0x68
 #define I2C_PORT I2C_NUM_0
 
 class MotionDriver {

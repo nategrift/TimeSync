@@ -28,3 +28,19 @@ To see how the code is designed and the structure behind this TimeSync System, p
 
 ## Debug cmds for viewing crash report
 xtensa-esp32-elf-addr2line -pfiaC -e C:\Users\nateg\OneDrive\Documents\GitHub\TimeSync\.pio\build\esp32s3box\firmware.elf 
+
+
+## Hardware PINS
+#### GPIO - Connection
+GPIO 1 - I2C1_SDA
+GPIO 2 - I2C1_SCL
+GPIO 8 - LCD_DC
+GPIO 9 - LCD_RST
+GPIO 10 - LCD_CS
+GPIO 11 - LCD_MISO
+GPIO 12 - LCD_CLK
+GPIO 13 - LCD_MOSI
+GPIO 17 - TP_INT
+GPIO 18 - TP_RST
+GPIO 21 - LCD_PWM
+

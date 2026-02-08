@@ -6,7 +6,7 @@
 #include "ConfigManager.h"
 #include "TimeManager.h"
 #include "TimeEventsManager.h"
-#include "WifiManager.h"
+// #include "WifiManager.h"
 extern "C" {
 #include "gc9a01.h"
 #include "display.h"
@@ -15,7 +15,7 @@ extern "C" {
 
 static const char *TAG = "AwakeManager";
 
-#define TOUCH_INT_PIN GPIO_NUM_5
+#define TOUCH_INT_PIN GPIO_NUM_17
 
 static std::vector<lv_timer_t*> paused_timers;
 
@@ -69,7 +69,7 @@ void AwakeManager::sleepDevice() {
 
     // Turn off the screen
     GraphicsDriver::turn_off_screen();
-    WifiManager::prepareForSleep();
+    // WifiManager::prepareForSleep();
 
     // Wait till all the SPI communications have been sent, then sleep
     vTaskDelay(pdMS_TO_TICKS(50));
@@ -102,7 +102,7 @@ void AwakeManager::sleepDevice() {
 
 void AwakeManager::wakeDevice(int before_sleep_time) {
 
-    WifiManager::resumeFromSleep();
+    // WifiManager::resumeFromSleep();
 
     ESP_LOGI(TAG, "Device woken up.");
     gc9a01_reload();

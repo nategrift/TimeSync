@@ -36,6 +36,7 @@ static esp_timer_handle_t lvgl_tick_timer = NULL;
 
 bool display_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
+    ESP_LOGD(TAG, "SPI transfer complete - flush ready");
     assert(disp_drv);
     lv_display_flush_ready(disp_drv);
     return false;
@@ -43,14 +44,39 @@ bool display_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, esp_lcd
 
 static void example_lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
+    static uint32_t flush_count = 0;
+    flush_count++;
+
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) lv_display_get_user_data(disp);
+
+    if (!panel_handle) {
+        ESP_LOGE(TAG, "FLUSH: panel_handle is NULL!");
+        lv_display_flush_ready(disp);
+        return;
+    }
+
     int offsetx1 = area->x1;
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
+
+    // Log every 100th flush to avoid flooding serial
+    if (flush_count % 100 == 0) {
+        int width = offsetx2 - offsetx1 + 1;
+        int height = offsety2 - offsety1 + 1;
+        ESP_LOGI(TAG, "FLUSH #%lu: area(%d,%d)->(%d,%d) size=%dx%d px_map=%p panel=%p",
+                 flush_count, offsetx1, offsety1, offsetx2, offsety2,
+                 width, height, (void*)px_map, (void*)panel_handle);
+    }
+
     // copy a buffer's content to a specific area of the display
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, (void*)px_map);
 
+    // TEMPORARY: manually signal flush complete so LVGL doesn't block
+    // if the display SPI/DMA isn't completing transfers.
+    // Remove this once the display hardware is confirmed working --
+    // normally display_notify_lvgl_flush_ready() handles this via on_color_trans_done.
+    lv_display_flush_ready(disp);
 }
 
 /* Rotate display and touch, when rotated screen in LVGL. Called when driver parameters are updated. */
@@ -115,14 +141,14 @@ void lvglDisplayConfig(void)
     // static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
 
     // alloc draw buffers used by LVGL
-    // allocating 1/4 buffer in PSRAM
+    // allocating 1/10 buffer in internal RAM
     #define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565))
-    int buff_size = EXAMPLE_LCD_H_RES * (EXAMPLE_LCD_V_RES/4) * BYTES_PER_PIXEL;
-    uint8_t *buf1 = heap_caps_malloc(buff_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA);
+    int buff_size = EXAMPLE_LCD_H_RES * (EXAMPLE_LCD_V_RES/10) * BYTES_PER_PIXEL;
+    uint8_t *buf1 = (uint8_t *)heap_caps_malloc(buff_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA);
     assert(buf1);
-    uint8_t *buf2 = heap_caps_malloc(buff_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_DMA);
-    assert(buf2);
-    lv_display_set_buffers(disp_drv, buf1, buf2, buff_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    // uint8_t *buf2 = (uint8_t *)heap_caps_malloc(buff_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_DMA);
+    // assert(buf2);
+    lv_display_set_buffers(disp_drv, buf1, NULL, buff_size, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     lv_display_set_user_data(disp_drv, panel_handle);
     

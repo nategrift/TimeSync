@@ -31,14 +31,14 @@ extern "C" {
 #include "TimeEventsManager.h"
 #include "VibrationDriver.h"
 #include "buzzer_driver.h"
-#include "WifiManager.h"
+// #include "WifiManager.h"
 #include "BatteryManager.h"
 #include "esp_heap_caps.h"
 
 static BatteryManager batteryManager;
 
-// Custom Lua allocator that uses PSRAM
-static void* lua_psram_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
+// Custom Lua allocator that uses internal RAM
+static void* lua_internal_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
     (void)ud;
     (void)osize;
     
@@ -49,12 +49,12 @@ static void* lua_psram_alloc(void *ud, void *ptr, size_t osize, size_t nsize) {
     }
     
     if (ptr == NULL) {
-        // Allocate new memory in PSRAM
-        return heap_caps_malloc(nsize, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        // Allocate new memory in internal RAM
+        return heap_caps_malloc(nsize, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     }
     
-    // Reallocate - try PSRAM first
-    void* new_ptr = heap_caps_realloc(ptr, nsize, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    // Reallocate in internal RAM
+    void* new_ptr = heap_caps_realloc(ptr, nsize, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     if (new_ptr == NULL) {
         // Fallback to any available memory
         new_ptr = heap_caps_realloc(ptr, nsize, MALLOC_CAP_8BIT);
@@ -808,123 +808,123 @@ void configureLuaState(lua_State *L) {
     
     lua_setglobal(L, "kv");
 
-    // WiFi module
-    lua_newtable(L);
+    // // WiFi module
+    // lua_newtable(L);
     
-    // wifi.isOn() -> boolean
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushboolean(L, WifiManager::isOn());
-        return 1;
-    });
-    lua_setfield(L, -2, "isOn");
+    // // wifi.isOn() -> boolean
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushboolean(L, WifiManager::isOn());
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "isOn");
     
-    // wifi.setEnabled(enabled) - turn WiFi on/off (async)
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        bool enabled = lua_toboolean(L, 1);
+    // // wifi.setEnabled(enabled) - turn WiFi on/off (async)
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     bool enabled = lua_toboolean(L, 1);
         
-        xTaskCreatePinnedToCore([](void* p) {
-            bool enable = (bool)(uintptr_t)p;
-            ConfigManager::setConfigInt("Network", "Enabled", enable ? 1 : 0);
-            if (enable) WifiManager::turnOn();
-            else WifiManager::turnOff();
-            vTaskDelete(NULL);
-        }, "wifi_toggle", 4096, (void*)(uintptr_t)enabled, 5, nullptr, 1);
+    //     xTaskCreatePinnedToCore([](void* p) {
+    //         bool enable = (bool)(uintptr_t)p;
+    //         ConfigManager::setConfigInt("Network", "Enabled", enable ? 1 : 0);
+    //         if (enable) WifiManager::turnOn();
+    //         else WifiManager::turnOff();
+    //         vTaskDelete(NULL);
+    //     }, "wifi_toggle", 4096, (void*)(uintptr_t)enabled, 5, nullptr, 1);
         
-        return 0;
-    });
-    lua_setfield(L, -2, "setEnabled");
+    //     return 0;
+    // });
+    // lua_setfield(L, -2, "setEnabled");
     
-    // wifi.isEnabled() -> boolean (config setting)
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushboolean(L, ConfigManager::getConfigInt("Network", "Enabled") != 0);
-        return 1;
-    });
-    lua_setfield(L, -2, "isEnabled");
+    // // wifi.isEnabled() -> boolean (config setting)
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushboolean(L, ConfigManager::getConfigInt("Network", "Enabled") != 0);
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "isEnabled");
     
-    // wifi.startScan()
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        WifiManager::startScan();
-        return 0;
-    });
-    lua_setfield(L, -2, "startScan");
+    // // wifi.startScan()
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     WifiManager::startScan();
+    //     return 0;
+    // });
+    // lua_setfield(L, -2, "startScan");
     
-    // wifi.isScanInProgress() -> boolean
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushboolean(L, WifiManager::isScanInProgress());
-        return 1;
-    });
-    lua_setfield(L, -2, "isScanInProgress");
+    // // wifi.isScanInProgress() -> boolean
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushboolean(L, WifiManager::isScanInProgress());
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "isScanInProgress");
     
-    // wifi.getScannedNetworks() -> array
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        std::vector<NetworkInfo> networks = WifiManager::getScannedNetworks();
-        lua_newtable(L);
-        int i = 1;
-        for (const auto& n : networks) {
-            lua_newtable(L);
-            lua_pushstring(L, n.ssid.c_str());
-            lua_setfield(L, -2, "ssid");
-            lua_pushinteger(L, n.rssi);
-            lua_setfield(L, -2, "rssi");
-            lua_pushstring(L, n.getAuthModeString().c_str());
-            lua_setfield(L, -2, "authMode");
-            lua_pushstring(L, n.getSignalQuality().c_str());
-            lua_setfield(L, -2, "signalQuality");
-            lua_pushboolean(L, n.isOpen());
-            lua_setfield(L, -2, "isOpen");
-            lua_rawseti(L, -2, i++);
-        }
-        return 1;
-    });
-    lua_setfield(L, -2, "getScannedNetworks");
+    // // wifi.getScannedNetworks() -> array
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     std::vector<NetworkInfo> networks = WifiManager::getScannedNetworks();
+    //     lua_newtable(L);
+    //     int i = 1;
+    //     for (const auto& n : networks) {
+    //         lua_newtable(L);
+    //         lua_pushstring(L, n.ssid.c_str());
+    //         lua_setfield(L, -2, "ssid");
+    //         lua_pushinteger(L, n.rssi);
+    //         lua_setfield(L, -2, "rssi");
+    //         lua_pushstring(L, n.getAuthModeString().c_str());
+    //         lua_setfield(L, -2, "authMode");
+    //         lua_pushstring(L, n.getSignalQuality().c_str());
+    //         lua_setfield(L, -2, "signalQuality");
+    //         lua_pushboolean(L, n.isOpen());
+    //         lua_setfield(L, -2, "isOpen");
+    //         lua_rawseti(L, -2, i++);
+    //     }
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "getScannedNetworks");
     
-    // wifi.selectNetwork(ssid, password) - save to config and connect (async)
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        const char* ssid = luaL_checkstring(L, 1);
-        const char* password = luaL_optstring(L, 2, "");
+    // // wifi.selectNetwork(ssid, password) - save to config and connect (async)
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     const char* ssid = luaL_checkstring(L, 1);
+    //     const char* password = luaL_optstring(L, 2, "");
         
-        ConfigManager::setConfigString("Network", "SSID", ssid);
-        ConfigManager::setConfigString("Network", "Password", password);
-        ESP_LOGI(TAG, "Network saved: %s", ssid);
+    //     ConfigManager::setConfigString("Network", "SSID", ssid);
+    //     ConfigManager::setConfigString("Network", "Password", password);
+    //     ESP_LOGI(TAG, "Network saved: %s", ssid);
         
-        xTaskCreatePinnedToCore([](void* p) {
-            WifiManager::connect();
-            vTaskDelete(NULL);
-        }, "wifi_connect", 4096, nullptr, 5, nullptr, 1);
+    //     xTaskCreatePinnedToCore([](void* p) {
+    //         WifiManager::connect();
+    //         vTaskDelete(NULL);
+    //     }, "wifi_connect", 4096, nullptr, 5, nullptr, 1);
         
-        return 0;
-    });
-    lua_setfield(L, -2, "selectNetwork");
+    //     return 0;
+    // });
+    // lua_setfield(L, -2, "selectNetwork");
     
-    // wifi.isConnected() -> boolean
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushboolean(L, WifiManager::isConnected());
-        return 1;
-    });
-    lua_setfield(L, -2, "isConnected");
+    // // wifi.isConnected() -> boolean
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushboolean(L, WifiManager::isConnected());
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "isConnected");
     
-    // wifi.getConnectedSSID() -> string
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushstring(L, WifiManager::getConnectedSSID().c_str());
-        return 1;
-    });
-    lua_setfield(L, -2, "getConnectedSSID");
+    // // wifi.getConnectedSSID() -> string
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushstring(L, WifiManager::getConnectedSSID().c_str());
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "getConnectedSSID");
     
-    // wifi.getSignalStrength() -> number (RSSI in dBm)
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        lua_pushinteger(L, WifiManager::getSignalStrength());
-        return 1;
-    });
-    lua_setfield(L, -2, "getSignalStrength");
+    // // wifi.getSignalStrength() -> number (RSSI in dBm)
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     lua_pushinteger(L, WifiManager::getSignalStrength());
+    //     return 1;
+    // });
+    // lua_setfield(L, -2, "getSignalStrength");
     
-    // wifi.disconnect()
-    lua_pushcfunction(L, [](lua_State *L) -> int {
-        WifiManager::disconnect();
-        return 0;
-    });
-    lua_setfield(L, -2, "disconnect");
+    // // wifi.disconnect()
+    // lua_pushcfunction(L, [](lua_State *L) -> int {
+    //     WifiManager::disconnect();
+    //     return 0;
+    // });
+    // lua_setfield(L, -2, "disconnect");
     
-    lua_setglobal(L, "wifi");
+    // lua_setglobal(L, "wifi");
 
     // Battery bindings
     lua_newtable(L);
@@ -1086,8 +1086,8 @@ void runLuaScriptTask(void *pvParameters) {
         }
 
         if (!appOpen && appConfig != nullptr) {
-            // Use custom PSRAM allocator for Lua to save internal RAM
-            L = lua_newstate(lua_psram_alloc, NULL);
+            // Use custom internal RAM allocator for Lua
+            L = lua_newstate(lua_internal_alloc, NULL);
             luaL_openlibs(L);  // Open standard libraries (needed since we're not using luaL_newstate)
             configureLuaState(L);
             ESP_LOGI(TAG, "Opening app: %s", appConfig->name.c_str());

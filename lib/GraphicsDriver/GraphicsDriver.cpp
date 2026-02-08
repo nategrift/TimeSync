@@ -29,7 +29,7 @@ void GraphicsDriver::init() {
     // // Create LVGL task
     // MUST be on Core 0 - LVGL callbacks invoke Lua code, and Lua state is on Core 0
     // Reduced from 128KB to 32KB - 128KB was excessive and consuming internal RAM
-    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 32768, NULL, 4, NULL, 0);
+    xTaskCreatePinnedToCore(lvgl_task, "Rendering Task", 32768, NULL, 5, NULL, 1);
     esp_task_wdt_config_t twdt_config = {
         .timeout_ms = 5000,                // 5 second timeout
         .idle_core_mask = (1 << 0),        // Watch core 0
@@ -53,6 +53,8 @@ void GraphicsDriver::lvgl_task(void *arg) {
     const int CONFIG_REFRESH_INTERVAL = 150;  // ~5 seconds at 30 FPS
 
     while (1) {
+
+        ESP_LOGI(TAG, "LVGL task running");
         // Refresh config periodically instead of every frame
         if (++config_refresh_counter >= CONFIG_REFRESH_INTERVAL) {
             screen_timeout_ms = ConfigManager::getConfigInt("General", "ScreenTimeout") * 1000;
@@ -63,6 +65,9 @@ void GraphicsDriver::lvgl_task(void *arg) {
         LvglMutex::lock();
         uint32_t time_till_next = lv_timer_handler();
         LvglMutex::unlock();
+
+        ESP_LOGI(TAG, "LVGL task running, time_till_next=%lu ms", (unsigned long)time_till_next);
+
 
         // Ensure a minimum delay to prevent CPU lockup
         if (time_till_next < min_task_delay) {

@@ -36,26 +36,26 @@ bool WifiManager::turnOn() {
         ESP_LOGE(TAG, "netif init failed: %s", esp_err_to_name(ret));
         return false;
     }
-    
+
     // Create event loop only once
     ret = esp_event_loop_create_default();
     if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE) {
         ESP_LOGE(TAG, "event loop failed: %s", esp_err_to_name(ret));
         return false;
     }
-    
+
     // Create STA netif only if it doesn't exist
     if (!sta_netif) {
         sta_netif = esp_netif_create_default_wifi_sta();
     }
-    
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ret = esp_wifi_init(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "wifi init failed: %s", esp_err_to_name(ret));
         return false;
     }
-    
+
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &eventHandler, NULL, NULL);
     esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &eventHandler, NULL, NULL);
     
@@ -64,7 +64,7 @@ bool WifiManager::turnOn() {
         ESP_LOGE(TAG, "set mode failed: %s", esp_err_to_name(ret));
         return false;
     }
-    
+
     ret = esp_wifi_start();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "wifi start failed: %s", esp_err_to_name(ret));
@@ -170,17 +170,17 @@ bool WifiManager::isScanInProgress() {
 bool WifiManager::connect() {
     if (!wifiOn) {
         ESP_LOGE(TAG, "WiFi not on");
-        return false;
+            return false;
     }
-    
+
     std::string ssid = ConfigManager::getConfigString("Network", "SSID");
     std::string password = ConfigManager::getConfigString("Network", "Password");
-    
+
     if (ssid.empty()) {
         ESP_LOGE(TAG, "No network configured");
         return false;
     }
-    
+
     ESP_LOGI(TAG, "Connecting to: %s", ssid.c_str());
     
     if (isConnected()) disconnect();
@@ -258,20 +258,20 @@ esp_err_t WifiManager::httpGet(const char* url, std::string& response) {
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
     esp_http_client_set_header(client, "Accept", "application/json");
-    
+
     esp_err_t err = esp_http_client_open(client, 0);
     if (err != ESP_OK) {
         esp_http_client_cleanup(client);
         return err;
     }
-    
+
     int len = esp_http_client_fetch_headers(client);
     if (len < 0) {
         esp_http_client_close(client);
         esp_http_client_cleanup(client);
         return ESP_FAIL;
     }
-    
+
     char buffer[512];
     response.clear();
     int read_len;
@@ -279,7 +279,7 @@ esp_err_t WifiManager::httpGet(const char* url, std::string& response) {
         buffer[read_len] = 0;
         response += buffer;
     }
-    
+
     esp_http_client_close(client);
     esp_http_client_cleanup(client);
     return response.empty() ? ESP_FAIL : ESP_OK;
@@ -288,17 +288,17 @@ esp_err_t WifiManager::httpGet(const char* url, std::string& response) {
 bool WifiManager::fetchWorldTime(std::string& errorMsg, time_t& time) {
     if (!isConnected()) {
         errorMsg = "Not connected";
-        return false;
+            return false;
     }
-    
+
     std::string response;
     if (httpGet("http://worldtimeapi.org/api/ip", response) != ESP_OK) {
         errorMsg = "HTTP request failed";
-        return false;
-    }
-    
+            return false;
+        }
+
     size_t pos = response.find("\"unixtime\"");
-    if (pos == std::string::npos) {
+        if (pos == std::string::npos) {
         errorMsg = "Invalid response";
         return false;
     }
@@ -324,6 +324,6 @@ void WifiManager::resumeFromSleep() {
         if (!ssid.empty()) {
             turnOn();
             connect();
-        }
     }
+}
 }

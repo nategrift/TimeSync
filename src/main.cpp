@@ -19,7 +19,7 @@ extern "C" {
 #include "ConfigManager.h"
 #include "TimeEventsManager.h"
 #include "NotificationManager.h"
-#include "WifiManager.h"
+// #include "WifiManager.h"
 #include "MotionDriver.h"
 #include "GraphicsDriver.h"
 #include "TouchDriver.h"

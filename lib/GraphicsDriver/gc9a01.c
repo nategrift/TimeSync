@@ -81,6 +81,7 @@ void gc9a01_displayInit(void)
 
 
     ESP_ERROR_CHECK(esp_lcd_new_panel_gc9a01(io_handle, &panel_config, &panel_handle));
+    ESP_LOGI(gc9a01, "Panel handle: %p, IO handle: %p", (void*)panel_handle, (void*)io_handle);
 
     gc9a01_reload();
 

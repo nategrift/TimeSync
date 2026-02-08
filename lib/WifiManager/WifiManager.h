@@ -63,7 +63,7 @@ public:
     // Sleep/Wake
     static void prepareForSleep();
     static void resumeFromSleep();
-    
+
 private:
     static bool wifiOn;
     static bool scanning;

@@ -1,6 +1,6 @@
 #include "VibrationDriver.h"
 
-gpio_num_t VibrationDriver::vibrationPin = GPIO_NUM_33;
+gpio_num_t VibrationDriver::vibrationPin = GPIO_NUM_35;
 volatile bool VibrationDriver::stopVibration = false;
 TaskHandle_t VibrationDriver::vibrationTaskHandle = NULL;
 TaskHandle_t VibrationDriver::patternVibrationTaskHandle = NULL;

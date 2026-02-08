@@ -4,8 +4,8 @@
 #include "driver/gpio.h"
 #include "ConfigManager.h"
 
-#define I2C_SCL GPIO_NUM_7
-#define I2C_SDA GPIO_NUM_6
+#define I2C_SCL GPIO_NUM_2
+#define I2C_SDA GPIO_NUM_1
 #define I2C_NUM I2C_NUM_0
 
 static const char *TAG = "MotionDriver";

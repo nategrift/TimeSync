@@ -103,7 +103,7 @@ local wifi_icon = root:Label {
 
 -- Battery status icon (centered by default, moves right when wifi shown)
 local battery_icon = root:Label {
-    text = icons.battery_full,
+    text = "FULL",
     text_color = colors.status_off,
     align = {
         type = lvgl.ALIGN.BOTTOM_MID,

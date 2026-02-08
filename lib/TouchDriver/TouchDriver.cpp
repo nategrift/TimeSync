@@ -1,10 +1,10 @@
 #include "TouchDriver.h"
 
-#define I2C_SCL GPIO_NUM_7
-#define I2C_SDA GPIO_NUM_6
+#define I2C_SCL GPIO_NUM_2
+#define I2C_SDA GPIO_NUM_1
 #define I2C_NUM I2C_NUM_0
-#define RST_GPIO GPIO_NUM_13
-#define INT_GPIO GPIO_NUM_5
+#define RST_GPIO GPIO_NUM_18
+#define INT_GPIO GPIO_NUM_17
 
 static const char *TAG = "TouchDriver";
 
@@ -76,6 +76,9 @@ TouchData TouchDriver::getTouchCoordinates() {
     if (ret == ESP_OK) {
         TouchData touchData;
         touchData.touch_detected = (data[1] == 0x01);
+        if (touchData.touch_detected) {
+            ESP_LOGI(TAG, "Touch detected: Gesture ID %d, X %d, Y %d", data[0], ((data[2] & 0x0F) << 8) | data[3], ((data[4] & 0x0F) << 8) | data[5]);
+        }
         touchData.gesture_id = data[0];
         touchData.x = ((data[2] & 0x0F) << 8) | data[3]; // Masking and combining X coordinates
         touchData.y = ((data[4] & 0x0F) << 8) | data[5]; // Masking and combining Y coordinates

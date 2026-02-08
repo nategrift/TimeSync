@@ -8,7 +8,7 @@
 
 class VibrationDriver {
 public:
-    static void init(gpio_num_t pin = GPIO_NUM_33);
+    static void init(gpio_num_t pin = GPIO_NUM_35);
     static void quickVibration(uint32_t duration_ms = 100);
     static void patternVibration(const std::vector<uint32_t>& pattern);
     static void stop(); 

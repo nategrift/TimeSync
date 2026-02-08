@@ -11,7 +11,7 @@ extern "C" {
 
 #include "buzzer_driver.h"
 
-#define BUZZER_PIN GPIO_NUM_21
+#define BUZZER_PIN GPIO_NUM_36
 #define BUZZER_CHANNEL LEDC_CHANNEL_1
 #define BUZZER_TIMER LEDC_TIMER_1
 
